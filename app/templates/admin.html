@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Jellyfin Invites{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
+{% block body %}
+<div class="wrap">
+  <section id="login" class="card login">
+    <h1>Jellyfin invite admin</h1>
+    <p class="muted">Password required. The invite dashboard and controls stay hidden until unlocked.</p>
+    <input id="token" type="password" autocomplete="current-password" placeholder="Password" autofocus>
+    <p><button onclick="unlock()">Unlock dashboard</button></p>
+    <p id="loginStatus" class="muted"></p>
+  </section>
+  <main id="app" class="card hidden">
+    <div class="top">
+      <div><h1>Jellyfin invites</h1><p class="muted">Create invite links and track whether they are active, used, expired, or revoked.</p></div>
+      <div class="toolbar"><button class="secondary" onclick="list()">Refresh</button><button class="secondary" onclick="lock()">Lock</button></div>
+    </div>
+    <div class="stats"><div class="stat"><b id="activeCount">0</b><span class="muted">Active</span></div><div class="stat"><b id="usedCount">0</b><span class="muted">Used</span></div><div class="stat"><b id="expiredCount">0</b><span class="muted">Expired</span></div><div class="stat"><b id="revokedCount">0</b><span class="muted">Revoked</span></div></div>
+    <div class="grid"><input id="note" placeholder="Friend name or context"><input id="days" type="number" min="1" max="90" value="14"><button onclick="create()">Create invite</button></div>
+    <p id="status" class="muted"></p>
+    <div class="table-wrap"><table class="table"><thead><tr><th>Status</th><th>Invite link</th><th>Note</th><th>Expires</th><th>Used by</th><th>Actions</th></tr></thead><tbody id="out"></tbody></table></div>
+  </main>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script>
+token.value=sessionStorage.inviteToken||'';function headers(){return {'X-Admin-Token':sessionStorage.inviteToken||token.value,'Content-Type':'application/json'}}async function api(u,o={}){let r=await fetch(u,{...o,headers:headers()});let j=await r.json();if(!r.ok||!j.ok)throw Error(j.message||'Request failed');return j}function state(i){let now=new Date();if(i.revoked_at)return 'revoked';if(i.used_at)return 'used';if(new Date(i.expires_at)<now)return 'expired';return 'active'}function say(v){toast.textContent=v;toast.classList.remove('hidden');setTimeout(()=>toast.classList.add('hidden'),1800)}async function copy(v){await navigator.clipboard?.writeText(v);say('Invite link copied')}function row(i){let st=state(i),url='https://join.levangie.dev/j/'+i.code;return `<tr><td><span class="pill ${st}">${st}</span></td><td><button class="invite-link" title="Click to copy" onclick="copy('${url}')">${url}</button></td><td>${i.note||''}</td><td>${new Date(i.expires_at).toLocaleString()}</td><td>${i.used_by_email||''}</td><td>${st==='active'?`<button class="danger" onclick="revoke('${i.code}')">Revoke</button>`:''}</td></tr>`}function counts(items){let c={active:0,used:0,expired:0,revoked:0};items.forEach(i=>c[state(i)]++);activeCount.textContent=c.active;usedCount.textContent=c.used;expiredCount.textContent=c.expired;revokedCount.textContent=c.revoked}async function unlock(){try{sessionStorage.inviteToken=token.value;await list();login.classList.add('hidden');app.classList.remove('hidden')}catch(e){loginStatus.textContent=e.message}}function lock(){sessionStorage.removeItem('inviteToken');token.value='';app.classList.add('hidden');login.classList.remove('hidden')}async function list(){let j=await api('/api/admin/invites');counts(j.invites);out.innerHTML=j.invites.map(row).join('')||'<tr><td colspan=6 class=muted>No invites yet.</td></tr>'}async function create(){try{let j=await api('/api/admin/invites',{method:'POST',body:JSON.stringify({note:note.value,expiresDays:days.value})});status.textContent='Created '+j.url;await copy(j.url);note.value='';await list()}catch(e){status.textContent=e.message}}async function revoke(c){if(!confirm('Revoke this invite?'))return;await api('/api/admin/invites/'+c+'/revoke',{method:'POST'});say('Invite revoked');await list()}if(token.value)unlock();
+</script>
+{% endblock %}

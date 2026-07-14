@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Join Jellyfin{% endblock %}
+{% block body %}
+<main class="card" style="width:min(100%,680px);margin:8vh auto">
+  <h1>Join Jellyfin</h1>
+  <p class="lede">Create your Keycloak account and unlock Jellyfin plus requests. Your invite code is already filled from the link you were sent.</p>
+  <form id="f">
+    <label>Email</label>
+    <input id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+    <label>Invite code</label>
+    <input id="code" value="{{ code }}" readonly required>
+    <p class="muted">You will use Keycloak to sign in to Jellyfin and Requests. No separate Jellyfin password needed.</p>
+    <button>Create account and grant access</button>
+  </form>
+  <div id="m" class="msg" hidden></div>
+  <div id="next" class="note warn" hidden><strong>Next step:</strong> check your email from Keycloak, verify your email, and set your password. After that, continue to the setup guide.</div>
+  <a id="guide" class="btn" href="/" hidden style="width:100%;margin-top:20px">Continue to Jellyfin setup guide</a>
+</main>
+<script>
+f.onsubmit=async e=>{e.preventDefault();m.hidden=false;m.className='msg';m.textContent='Creating account...';try{let r=await fetch('/api/activate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.value,code:code.value})});let j=await r.json();if(!r.ok||!j.ok)throw Error(j.message||'Activation failed.');f.hidden=true;m.className='msg ok';m.textContent=j.message;next.hidden=false;guide.hidden=false;}catch(x){m.className='msg err';m.textContent=x.message||'Activation failed. Contact Pierce.'}}
+</script>
+{% endblock %}
