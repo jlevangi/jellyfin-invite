@@ -1,4 +1,5 @@
 import datetime as dt
+import re
 import secrets
 
 from flask import Blueprint, current_app, jsonify, render_template, request
@@ -7,6 +8,7 @@ from .db import connect, now, rows
 from .keycloak import Keycloak
 
 bp = Blueprint("main", __name__)
+EMAIL_RE = re.compile(r"^[^@\s]{1,254}@[^@\s]{1,253}\.[^@\s]{2,63}$")
 
 
 def get_db():
@@ -98,7 +100,7 @@ def activate():
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip().lower()
     code = (data.get("code") or "").strip().upper()
-    if "@" not in email or not code:
+    if not EMAIL_RE.fullmatch(email) or not code:
         return jsonify(ok=False, message="Email and invite code are required."), 400
     with get_db() as con:
         con.execute("begin immediate")
@@ -106,7 +108,9 @@ def activate():
         if not invite or invite["used_at"] or invite["revoked_at"] or invite["expires_at"] <= now():
             return jsonify(ok=False, message="Invite code is invalid, expired, used, or revoked."), 403
         created = keycloak().activate(email)
-        con.execute("update invite_codes set used_at=?, used_by_email=? where code=?", (now(), email, code))
+        cur = con.execute("update invite_codes set used_at=?, used_by_email=? where code=?", (now(), email, code))
+        if cur.rowcount != 1:
+            raise RuntimeError("Invite update failed")
     return jsonify(
         ok=True,
         created=created,

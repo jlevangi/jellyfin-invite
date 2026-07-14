@@ -3,6 +3,7 @@ import os
 
 class Config:
     DB_PATH = os.environ.get("DB_PATH", "/data/invites.sqlite3")
+    MAX_CONTENT_LENGTH = 16 * 1024
     ADMIN_TOKEN = os.environ["ADMIN_TOKEN"]
     KEYCLOAK_CLIENT_ID = os.environ["KEYCLOAK_CLIENT_ID"]
     KEYCLOAK_CLIENT_SECRET = os.environ["KEYCLOAK_CLIENT_SECRET"]

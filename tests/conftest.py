@@ -24,6 +24,7 @@ class TestConfig:
     KEYCLOAK_GROUP_ID = "test-group"
     KEYCLOAK_BASE = "https://auth.example.test"
     KEYCLOAK_REALM = "master"
+    MAX_CONTENT_LENGTH = 16 * 1024
     PUBLIC_BASE_URL = "https://join.example.test"
     JELLYFIN_URL = "https://jellyfin.example.test"
     REQUESTS_URL = "https://request.example.test"

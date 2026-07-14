@@ -22,6 +22,9 @@ def test_healthz(client):
     res = client.get("/healthz")
     assert res.status_code == 200
     assert res.text == "ok\n"
+    assert res.headers["X-Content-Type-Options"] == "nosniff"
+    assert res.headers["X-Frame-Options"] == "DENY"
+    assert "frame-ancestors 'none'" in res.headers["Content-Security-Policy"]
 
 
 def test_guide_page_renders_core_sections(client):
@@ -69,7 +72,13 @@ def test_admin_create_list_and_revoke_invite(client):
 
 def test_activation_rejects_bad_inputs(client):
     assert client.post("/api/activate", json={}).status_code == 400
+    assert client.post("/api/activate", json={"email": "bad@", "code": "missing"}).status_code == 400
     assert client.post("/api/activate", json={"email": "a@example.test", "code": "missing"}).status_code == 403
+
+
+def test_oversized_json_is_rejected(client):
+    res = client.post("/api/activate", json={"email": "a@example.test", "code": "x" * 20000})
+    assert res.status_code == 413
 
 
 def test_activation_marks_invite_used(client, monkeypatch):
