@@ -28,3 +28,4 @@ pytest
 docker build -t ghcr.io/jlevangi/jellyfin-invite:0.1.0 .
 docker push ghcr.io/jlevangi/jellyfin-invite:0.1.0
 ```
+
