@@ -30,6 +30,7 @@ def test_healthz(client):
 def test_guide_page_renders_core_sections(client):
     res = client.get("/")
     assert res.status_code == 200
+    assert b'href="/admin">Admin Login</a>' in res.data
     assert b"Watch Jellyfin. Request with Seerr." in res.data
     assert b"QuickConnect" in res.data
     assert b"Add Requests or Jellyfin to your home screen" in res.data
@@ -40,6 +41,8 @@ def test_guide_page_renders_core_sections(client):
 def test_join_page_renders_code_and_no_direct_app_buttons(client):
     res = client.get("/j/abc123")
     assert res.status_code == 200
+    assert b'href="/">Home</a>' in res.data
+    assert b'href="/admin">Admin Login</a>' in res.data
     assert b'value="ABC123"' in res.data
     assert b"Continue to Jellyfin setup guide" in res.data
     assert b"Open Jellyfin" not in res.data

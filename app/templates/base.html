@@ -7,5 +7,14 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
   {% block styles %}{% endblock %}
 </head>
-<body>{% block body %}{% endblock %}</body>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">Pierce Media</a>
+    <nav class="site-nav" aria-label="Main navigation">
+      <a class="btn secondary" href="/">Home</a>
+      <a class="btn secondary" href="/admin">Admin Login</a>
+    </nav>
+  </header>
+  {% block body %}{% endblock %}
+</body>
 </html>
