@@ -5,7 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PORT=8080
 
 WORKDIR /app
-RUN addgroup -S app && adduser -S -G app app
+RUN addgroup -S -g 101 app && adduser -S -u 100 -G app app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
