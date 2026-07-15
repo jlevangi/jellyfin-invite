@@ -45,7 +45,7 @@ def invite_is_invalid(invite):
 def success_message():
     return (
         "Jellyfin access granted.\n\n"
-        "You will sign in using Keycloak for:\n- jellyfin.levangie.org\n- request.levangie.org"
+        "Your account is ready for:\n- jellyfin.levangie.org\n- request.levangie.org"
     )
 
 

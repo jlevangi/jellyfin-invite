@@ -8,8 +8,12 @@
       <div class="eyebrow">Pierce's media setup</div>
       <h1>Watch Jellyfin. Request new media.</h1>
       <p class="lede">This page walks you through signing in, watching media, requesting new movies and shows, and getting Jellyfin onto your phone or TV.</p>
-      <div class="note warn"><strong>First:</strong> finish the Keycloak email you were sent. Verify your email and set your password. Keycloak is the account you will use for Jellyfin, Requests, and future Pierce-hosted apps.</div>
-      <div class="pillrow"><a class="btn" href="#jellyfin">Use Jellyfin</a><a class="btn secondary" href="#requests">Request media</a><a class="btn secondary" href="#home-screen">Add to home screen</a></div>
+      <div class="note warn"><strong>First:</strong> accept your invite and finish creating your account. Once that is done, continue with the steps below.</div>
+      <nav class="section-links" aria-label="Page sections">
+        <a href="#jellyfin"><span>1</span> Use Jellyfin</a>
+        <a href="#requests"><span>2</span> Request media</a>
+        <a href="#home-screen"><span>3</span> Add to home screen</a>
+      </nav>
     </div>
   </section>
   <div class="grid">
@@ -19,15 +23,29 @@
         <p>Jellyfin is where you watch the movies and shows already available in Pierce's library.</p>
         <div class="steps">
           <div class="step"><div class="num">1</div><div><strong>Open Jellyfin.</strong><br><a href="{{ jellyfin_url }}">{{ jellyfin_url }}</a></div></div>
-          <div class="step"><div class="num">2</div><div><strong>Sign in with Keycloak.</strong><br>Use the email and password you set from the Keycloak setup email. If Keycloak offers Google sign-in and you used Google, pick that again.</div></div>
+          <div class="step"><div class="num">2</div><div><strong>Sign in with your media account.</strong><br>Use the email and password from your account setup. If you used Google when creating the account, choose Google again.</div></div>
           <div class="step"><div class="num">3</div><div><strong>Browse or search.</strong><br>Pick a movie or show, then press <strong>Play</strong>.</div></div>
         </div>
+        <figure class="guide-shot">
+          <img src="{{ url_for('static', filename='img/jellyfin-login.jpg') }}" alt="Jellyfin login screen with sign-in options">
+          <figcaption>Jellyfin sign-in screen</figcaption>
+        </figure>
         <h3>TV login works differently</h3>
-        <p>Phones, tablets, and computers can open the Keycloak browser login directly. TVs and streaming devices are harder with a remote, so use <strong>QuickConnect</strong>.</p>
+        <p>Phones, tablets, and computers can open the normal browser login directly. TVs and streaming devices are harder with a remote, so use <strong>QuickConnect</strong>.</p>
         <div class="steps">
           <div class="step"><div class="num">1</div><div>Sign in to Jellyfin on your phone, tablet, or computer first.</div></div>
           <div class="step"><div class="num">2</div><div>Open the Jellyfin app on the TV and choose <strong>QuickConnect</strong> or <strong>Quick Connect</strong>.</div></div>
           <div class="step"><div class="num">3</div><div>Enter the TV code from your already-signed-in phone or computer, then approve the connection.</div></div>
+        </div>
+        <div class="shot-grid">
+          <figure class="guide-shot">
+            <img src="{{ url_for('static', filename='img/jellyfin-quick-connect.jpg') }}" alt="Jellyfin Quick Connect screen">
+            <figcaption>Jellyfin Quick Connect</figcaption>
+          </figure>
+          <figure class="guide-shot">
+            <img src="{{ url_for('static', filename='img/immich-quick-connect.jpg') }}" alt="Quick Connect approval example">
+            <figcaption>Quick Connect approval example</figcaption>
+          </figure>
         </div>
         <h3>Troubleshooting</h3>
         <ul><li>If the app asks for a server address, use <strong>{{ jellyfin_url }}</strong>.</li><li>Create and test your account on a phone, tablet, or computer before trying a TV.</li><li>If playback is slow, lower playback quality in the player settings.</li></ul>
@@ -37,7 +55,7 @@
         <p>Requests is where you ask for media that is not already available in Jellyfin.</p>
         <div class="steps">
           <div class="step"><div class="num">1</div><div><strong>Open Requests.</strong><br><a href="{{ requests_url }}">{{ requests_url }}</a></div></div>
-          <div class="step"><div class="num">2</div><div><strong>Sign in with Keycloak.</strong><br>Use the same Keycloak account as Jellyfin.</div></div>
+          <div class="step"><div class="num">2</div><div><strong>Sign in with your media account.</strong><br>Use the same account as Jellyfin.</div></div>
           <div class="step"><div class="num">3</div><div><strong>Search for a movie or show.</strong><br>Open the result and select <strong>Request</strong>.</div></div>
         </div>
         <h3>What happens next</h3>

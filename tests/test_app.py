@@ -42,8 +42,15 @@ def test_guide_page_renders_core_sections(client):
     res = client.get("/")
     assert res.status_code == 200
     assert b'href="/admin">Admin Login</a>' in res.data
+    assert b"Pierce's Media" in res.data
     assert b"Watch Jellyfin. Request new media." in res.data
+    assert b"accept your invite and finish creating your account" in res.data
+    assert b"Page sections" in res.data
     assert b"QuickConnect" in res.data
+    assert b"jellyfin-login.jpg" in res.data
+    assert b"jellyfin-quick-connect.jpg" in res.data
+    assert b"immich-quick-connect.jpg" in res.data
+    assert b"Keycloak" not in res.data
     assert b"Add Requests or Jellyfin to your home screen" in res.data
     assert b"https://jellyfin.example.test" in res.data
     assert b"https://request.example.test" in res.data
