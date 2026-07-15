@@ -26,6 +26,8 @@ class TestConfig:
     KEYCLOAK_REALM = "master"
     MAX_CONTENT_LENGTH = 16 * 1024
     PUBLIC_BASE_URL = "https://join.example.test"
+    OIDC_REDIRECT_URI = "https://join.example.test/oidc/callback"
+    OIDC_IDP_HINT = "google"
     JELLYFIN_URL = "https://jellyfin.example.test"
     REQUESTS_URL = "https://request.example.test"
 

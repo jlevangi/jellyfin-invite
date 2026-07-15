@@ -1,8 +1,10 @@
 import datetime as dt
 import re
 import secrets
+import urllib.parse
 
-from flask import Blueprint, current_app, jsonify, render_template, request
+from flask import Blueprint, current_app, jsonify, redirect, render_template, request
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 from .db import connect, now, rows
 from .keycloak import Keycloak
@@ -25,11 +27,26 @@ def keycloak():
     )
 
 
+def state_serializer():
+    return URLSafeTimedSerializer(current_app.config["ADMIN_TOKEN"], salt="jellyfin-invite-oidc")
+
+
 def need_admin():
     token = request.headers.get("X-Admin-Token") or request.headers.get("Authorization", "").removeprefix("Bearer ")
     if not secrets.compare_digest(token, current_app.config["ADMIN_TOKEN"]):
         return jsonify(ok=False, message="Unauthorized"), 401
     return None
+
+
+def invite_is_invalid(invite):
+    return not invite or invite["used_at"] or invite["revoked_at"] or invite["expires_at"] <= now()
+
+
+def success_message():
+    return (
+        "Jellyfin access granted.\n\n"
+        "You will sign in using Keycloak for:\n- jellyfin.levangie.org\n- request.levangie.org"
+    )
 
 
 @bp.get("/healthz")
@@ -49,6 +66,66 @@ def onboarding():
 @bp.get("/j/<code>")
 def join(code):
     return render_template("join.html", code=code.upper())
+
+
+@bp.get("/oidc/start/<code>")
+def oidc_start(code):
+    code = code.strip().upper()
+    with get_db() as con:
+        invite = con.execute("select * from invite_codes where code=?", (code,)).fetchone()
+    if invite_is_invalid(invite):
+        return render_template("join.html", code=code, error="Invite code is invalid, expired, used, or revoked."), 403
+
+    state = state_serializer().dumps({"code": code, "nonce": secrets.token_urlsafe(16)})
+    params = {
+        "client_id": current_app.config["KEYCLOAK_CLIENT_ID"],
+        "redirect_uri": current_app.config["OIDC_REDIRECT_URI"],
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": state,
+    }
+    if current_app.config["OIDC_IDP_HINT"]:
+        params["kc_idp_hint"] = current_app.config["OIDC_IDP_HINT"]
+    auth_url = (
+        f"{current_app.config['KEYCLOAK_BASE'].rstrip('/')}/realms/{current_app.config['KEYCLOAK_REALM']}"
+        f"/protocol/openid-connect/auth?{urllib.parse.urlencode(params)}"
+    )
+    return redirect(auth_url)
+
+
+@bp.get("/oidc/callback")
+def oidc_callback():
+    if request.args.get("error"):
+        return render_template("join.html", code="", error="Keycloak login was cancelled or failed."), 400
+    try:
+        state = state_serializer().loads(request.args.get("state", ""), max_age=900)
+    except SignatureExpired:
+        return render_template("join.html", code="", error="Invite login expired. Open your invite link and try again."), 400
+    except BadSignature:
+        return render_template("join.html", code="", error="Invite login state was invalid. Open your invite link and try again."), 400
+
+    code = state["code"]
+    kc = keycloak()
+    token = kc.exchange_code(request.args.get("code", ""), current_app.config["OIDC_REDIRECT_URI"])
+    user = kc.userinfo(token["access_token"])
+    email = (user.get("email") or "").lower()
+    subject = user.get("sub")
+    if not subject or not email or user.get("email_verified") is False:
+        return render_template("join.html", code=code, error="Keycloak did not return a verified email for this account."), 403
+
+    with get_db() as con:
+        con.execute("begin immediate")
+        invite = con.execute("select * from invite_codes where code=?", (code,)).fetchone()
+        if invite_is_invalid(invite):
+            return render_template("join.html", code=code, error="Invite code is invalid, expired, used, or revoked."), 403
+        kc.grant_existing_user(subject)
+        cur = con.execute(
+            "update invite_codes set used_at=?, used_by_email=?, used_by_subject=? where code=?",
+            (now(), email, subject, code),
+        )
+        if cur.rowcount != 1:
+            raise RuntimeError("Invite update failed")
+    return render_template("success.html", message=success_message())
 
 
 @bp.get("/admin")
@@ -105,17 +182,10 @@ def activate():
     with get_db() as con:
         con.execute("begin immediate")
         invite = con.execute("select * from invite_codes where code=?", (code,)).fetchone()
-        if not invite or invite["used_at"] or invite["revoked_at"] or invite["expires_at"] <= now():
+        if invite_is_invalid(invite):
             return jsonify(ok=False, message="Invite code is invalid, expired, used, or revoked."), 403
         created = keycloak().activate(email)
         cur = con.execute("update invite_codes set used_at=?, used_by_email=? where code=?", (now(), email, code))
         if cur.rowcount != 1:
             raise RuntimeError("Invite update failed")
-    return jsonify(
-        ok=True,
-        created=created,
-        message=(
-            "Account has been created, and Jellyfin access granted. Please check your email to set a password.\n\n"
-            "You will sign in using Keycloak for:\n- jellyfin.levangie.org\n- request.levangie.org"
-        ),
-    )
+    return jsonify(ok=True, created=created, message=success_message())

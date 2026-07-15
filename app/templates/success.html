@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Jellyfin Access Granted{% endblock %}
+{% block body %}
+<main class="card" style="width:min(100%,680px);margin:8vh auto">
+  <h1>Access granted</h1>
+  <div class="msg ok">{{ message }}</div>
+  <a class="btn" href="/" style="width:100%;margin-top:20px">Continue to Jellyfin setup guide</a>
+</main>
+{% endblock %}
