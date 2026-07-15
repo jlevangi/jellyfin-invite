@@ -3,19 +3,19 @@
 {% block body %}
 <main class="card" style="width:min(100%,680px);margin:8vh auto">
   <h1>Join Jellyfin</h1>
-  <p class="lede">Use your existing Google or Keycloak account to accept this invite and unlock Jellyfin plus Requests.</p>
+  <p class="lede">Use your Google account to accept this invite and unlock Jellyfin plus Requests.</p>
   {% if error %}<div class="msg err">{{ error }}</div>{% endif %}
-  <a class="btn" href="/oidc/start/{{ code }}" style="width:100%;margin:18px 0">Continue with Google or Keycloak</a>
+  <a class="btn" href="/oidc/start/{{ code }}" style="width:100%;margin:18px 0">Continue with Google</a>
   <p class="muted">Invite code: <strong>{{ code }}</strong></p>
   <details>
-    <summary class="muted">Need a password-based account instead?</summary>
+    <summary class="btn secondary" style="width:100%;margin:12px 0">Use email instead</summary>
     <form id="form">
       <label>Email</label>
       <input id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
       <label>Invite code</label>
       <input id="code" value="{{ code }}" readonly required>
-      <p class="muted">Use this only if you cannot sign in with Google or an existing Keycloak account.</p>
-      <button>Create password-based account</button>
+      <p class="muted">Enter your email and Keycloak will send a password setup link.</p>
+      <button>Email me a password setup link</button>
     </form>
   </details>
   <div id="message" class="msg" hidden></div>

@@ -54,7 +54,9 @@ def test_join_page_renders_code_and_no_direct_app_buttons(client):
     assert res.status_code == 200
     assert b'href="/">Home</a>' in res.data
     assert b'href="/admin">Admin Login</a>' in res.data
-    assert b"Continue with Google or Keycloak" in res.data
+    assert b"Continue with Google" in res.data
+    assert b"Use email instead" in res.data
+    assert b"Email me a password setup link" in res.data
     assert b'value="ABC123"' in res.data
     assert b"Continue to Jellyfin setup guide" in res.data
     assert b"Open Jellyfin" not in res.data
