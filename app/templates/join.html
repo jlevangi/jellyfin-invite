@@ -5,10 +5,9 @@
   <h1>Join Jellyfin</h1>
   <p class="lede">Use your Google account to accept this invite and unlock Jellyfin plus Requests.</p>
   {% if error %}<div class="msg err">{{ error }}</div>{% endif %}
-  <a class="btn" href="/oidc/start/{{ code }}" style="width:100%;margin:18px 0">Continue with Google</a>
-  <p class="muted">Invite code: <strong>{{ code }}</strong></p>
+  <a class="google-btn" href="/oidc/start/{{ code }}"><span class="google-mark" aria-hidden="true">G</span><span>Continue with Google</span></a>
   <details>
-    <summary class="btn secondary" style="width:100%;margin:12px 0">Use email instead</summary>
+    <summary class="btn secondary email-toggle">Use email instead</summary>
     <form id="form">
       <label>Email</label>
       <input id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
@@ -18,9 +17,11 @@
       <button>Email me a password setup link</button>
     </form>
   </details>
+  <p class="muted">Invite code: <strong>{{ code }}</strong></p>
   <div id="message" class="msg" hidden></div>
   <div id="next" class="note warn" hidden><strong>Next step:</strong> check your email from Keycloak, verify your email, and set your password. After that, continue to the setup guide.</div>
-  <a id="guide" class="btn" href="/" hidden style="width:100%;margin-top:20px">Continue to Jellyfin setup guide</a>
+  <div id="guideSeparator" class="separator" hidden><span>Next step</span></div>
+  <a id="guide" class="guide-link" href="/" hidden>Continue to Jellyfin setup guide</a>
 </main>
 <script src="{{ url_for('static', filename='js/join.js') }}" defer></script>
 {% endblock %}

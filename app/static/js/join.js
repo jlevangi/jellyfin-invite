@@ -15,6 +15,7 @@ form.addEventListener('submit', async event => {
     message.className = 'msg ok';
     message.textContent = json.message;
     next.hidden = false;
+    guideSeparator.hidden = false;
     guide.hidden = false;
   } catch (error) {
     message.className = 'msg err';
