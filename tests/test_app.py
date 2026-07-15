@@ -44,6 +44,9 @@ def test_guide_page_renders_core_sections(client):
     assert b'href="/admin">Admin Login</a>' in res.data
     assert b"Pierce's Media" in res.data
     assert b"Watch Jellyfin. Request new media." in res.data
+    assert b"Using Jellyfin" in res.data
+    assert b"Mobile device or computer sign-in" in res.data
+    assert b"TV sign-in with QuickConnect" in res.data
     assert b"download the Jellyfin app on your phone" in res.data
     assert b"Download the Jellyfin app on your TV" in res.data
     assert b"accept your invite and finish creating your account" in res.data

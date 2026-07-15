@@ -10,7 +10,7 @@
       <p class="lede">This page walks you through signing in, watching media, requesting new movies and shows, and getting Jellyfin onto your phone or TV.</p>
       <div class="note warn"><strong>First:</strong> accept your invite and finish creating your account. Once that is done, continue with the steps below.</div>
       <nav class="section-links" aria-label="Page sections">
-        <a href="#jellyfin"><span>1</span> Use Jellyfin</a>
+        <a href="#jellyfin"><span>1</span> Using Jellyfin</a>
         <a href="#requests"><span>2</span> Request media</a>
         <a href="#home-screen"><span>3</span> Add to home screen</a>
       </nav>
@@ -19,8 +19,13 @@
   <div class="grid">
     <main>
       <section id="jellyfin" class="card section">
-        <div class="eyebrow">Jellyfin</div><h2>Watch movies and shows</h2>
+        <div class="eyebrow">Jellyfin</div><h2>Using Jellyfin</h2>
         <p>Jellyfin is where you watch the movies and shows already available in Pierce's library.</p>
+        <nav class="subsection-links" aria-label="Jellyfin sign-in sections">
+          <a href="#jellyfin-mobile">Mobile device or computer sign-in</a>
+          <a href="#jellyfin-tv">TV sign-in with QuickConnect</a>
+        </nav>
+        <h3 id="jellyfin-mobile">Mobile device or computer sign-in</h3>
         <div class="steps">
           <div class="step"><div class="num">1</div><div><strong>Open Jellyfin.</strong><br>Click <a href="{{ jellyfin_url }}">{{ jellyfin_url }}</a>, or download the Jellyfin app on your phone and enter that server address.</div></div>
           <div class="step"><div class="num">2</div><div><strong>Sign in with your media account.</strong><br>Use the email and password from your account setup. If you used Google when creating the account, choose Google again.</div></div>
@@ -36,7 +41,7 @@
             <figcaption>Choose the sign-in option</figcaption>
           </figure>
         </div>
-        <h3>TV login works differently</h3>
+        <h3 id="jellyfin-tv">TV sign-in with QuickConnect</h3>
         <p>Phones, tablets, and computers can open the normal browser login directly. TVs and streaming devices are harder with a remote, so use <strong>QuickConnect</strong>.</p>
         <div class="steps">
           <div class="step"><div class="num">1</div><div>Download the Jellyfin app on your TV or streaming device.</div></div>
