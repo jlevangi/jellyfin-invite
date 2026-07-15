@@ -31,7 +31,7 @@ def test_guide_page_renders_core_sections(client):
     res = client.get("/")
     assert res.status_code == 200
     assert b'href="/admin">Admin Login</a>' in res.data
-    assert b"Watch Jellyfin. Request with Seerr." in res.data
+    assert b"Watch Jellyfin. Request new media." in res.data
     assert b"QuickConnect" in res.data
     assert b"Add Requests or Jellyfin to your home screen" in res.data
     assert b"https://jellyfin.example.test" in res.data
@@ -50,6 +50,12 @@ def test_join_page_renders_code_and_no_direct_app_buttons(client):
 
 
 def test_admin_requires_token(client):
+    page = client.get("/admin")
+    assert b"Admin password" in page.data
+    assert b"Invite note" in page.data
+    assert b"Expires after" in page.data
+    assert b"days" in page.data
+
     res = client.get("/api/admin/invites")
     assert res.status_code == 401
     assert res.json == {"ok": False, "message": "Unauthorized"}

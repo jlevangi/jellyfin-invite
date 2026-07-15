@@ -6,7 +6,8 @@
   <section id="login" class="card login">
     <h1>Jellyfin invite admin</h1>
     <p class="muted">Password required. The invite dashboard and controls stay hidden until unlocked.</p>
-    <input id="token" type="password" autocomplete="current-password" placeholder="Password" autofocus>
+    <label for="token">Admin password</label>
+    <input id="token" type="password" autocomplete="current-password" autofocus>
     <p><button id="unlockBtn">Unlock dashboard</button></p>
     <p id="loginStatus" class="muted"></p>
   </section>
@@ -16,7 +17,11 @@
       <div class="toolbar"><button id="refreshBtn" class="secondary">Refresh</button><button id="lockBtn" class="secondary">Lock</button></div>
     </div>
     <div class="stats"><div class="stat"><b id="activeCount">0</b><span class="muted">Active</span></div><div class="stat"><b id="usedCount">0</b><span class="muted">Used</span></div><div class="stat"><b id="expiredCount">0</b><span class="muted">Expired</span></div><div class="stat"><b id="revokedCount">0</b><span class="muted">Revoked</span></div></div>
-    <div class="grid"><input id="note" placeholder="Friend name or context"><input id="days" type="number" min="1" max="90" value="14"><button id="createBtn">Create invite</button></div>
+    <div class="invite-form">
+      <div class="field"><label for="note">Invite note</label><input id="note" placeholder="Friend name or context"></div>
+      <div class="field"><label for="days">Expires after</label><div class="input-suffix"><input id="days" type="number" min="1" max="90" value="14"><span>days</span></div></div>
+      <button id="createBtn">Create invite</button>
+    </div>
     <p id="status" class="muted"></p>
     <div class="table-wrap"><table class="table"><thead><tr><th>Status</th><th>Invite link</th><th>Note</th><th>Expires</th><th>Used by</th><th>Actions</th></tr></thead><tbody id="out"></tbody></table></div>
   </main>

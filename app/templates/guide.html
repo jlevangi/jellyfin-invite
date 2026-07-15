@@ -6,12 +6,11 @@
   <section class="hero">
     <div class="card">
       <div class="eyebrow">Pierce's media setup</div>
-      <h1>Watch Jellyfin. Request with Seerr.</h1>
+      <h1>Watch Jellyfin. Request new media.</h1>
       <p class="lede">This page walks you through signing in, watching media, requesting new movies and shows, and getting Jellyfin onto your phone or TV.</p>
       <div class="note warn"><strong>First:</strong> finish the Keycloak email you were sent. Verify your email and set your password. Keycloak is the account you will use for Jellyfin, Requests, and future Pierce-hosted apps.</div>
-      <div class="pillrow"><a class="btn" href="#jellyfin">Use Jellyfin</a><a class="btn secondary" href="#seerr">Request media</a><a class="btn secondary" href="#home-screen">Add to home screen</a></div>
+      <div class="pillrow"><a class="btn" href="#jellyfin">Use Jellyfin</a><a class="btn secondary" href="#requests">Request media</a><a class="btn secondary" href="#home-screen">Add to home screen</a></div>
     </div>
-    <div class="shot"><div><strong>Screenshot slot</strong><br><span class="small">Add a hero screenshot or simple diagram here later.</span></div></div>
   </section>
   <div class="grid">
     <main>
@@ -23,7 +22,6 @@
           <div class="step"><div class="num">2</div><div><strong>Sign in with Keycloak.</strong><br>Use the email and password you set from the Keycloak setup email. If Keycloak offers Google sign-in and you used Google, pick that again.</div></div>
           <div class="step"><div class="num">3</div><div><strong>Browse or search.</strong><br>Pick a movie or show, then press <strong>Play</strong>.</div></div>
         </div>
-        <div class="placeholder">Screenshot: Jellyfin sign-in screen</div>
         <h3>TV login works differently</h3>
         <p>Phones, tablets, and computers can open the Keycloak browser login directly. TVs and streaming devices are harder with a remote, so use <strong>QuickConnect</strong>.</p>
         <div class="steps">
@@ -31,20 +29,17 @@
           <div class="step"><div class="num">2</div><div>Open the Jellyfin app on the TV and choose <strong>QuickConnect</strong> or <strong>Quick Connect</strong>.</div></div>
           <div class="step"><div class="num">3</div><div>Enter the TV code from your already-signed-in phone or computer, then approve the connection.</div></div>
         </div>
-        <div class="placeholder">Screenshot: TV QuickConnect code</div>
-        <div class="placeholder">Screenshot: where to enter the QuickConnect code</div>
         <h3>Troubleshooting</h3>
         <ul><li>If the app asks for a server address, use <strong>{{ jellyfin_url }}</strong>.</li><li>Create and test your account on a phone, tablet, or computer before trying a TV.</li><li>If playback is slow, lower playback quality in the player settings.</li></ul>
       </section>
-      <section id="seerr" class="card section">
-        <div class="eyebrow">Seerr / Requests</div><h2>Request movies and shows</h2>
-        <p>Seerr is where you request media that is not already available in Jellyfin.</p>
+      <section id="requests" class="card section">
+        <div class="eyebrow">Requests</div><h2>Request movies and shows</h2>
+        <p>Requests is where you ask for media that is not already available in Jellyfin.</p>
         <div class="steps">
           <div class="step"><div class="num">1</div><div><strong>Open Requests.</strong><br><a href="{{ requests_url }}">{{ requests_url }}</a></div></div>
           <div class="step"><div class="num">2</div><div><strong>Sign in with Keycloak.</strong><br>Use the same Keycloak account as Jellyfin.</div></div>
           <div class="step"><div class="num">3</div><div><strong>Search for a movie or show.</strong><br>Open the result and select <strong>Request</strong>.</div></div>
         </div>
-        <div class="placeholder">Screenshot: Seerr login or search page</div>
         <h3>What happens next</h3>
         <ul><li><strong>Pending</strong> means waiting for approval or processing.</li><li><strong>Approved</strong> means accepted and waiting to become available.</li><li><strong>Available</strong> means ready to watch in Jellyfin.</li></ul>
         <p>Popular releases may appear in about 30 minutes. Niche items can take a day or two.</p>
@@ -53,10 +48,9 @@
         <div class="eyebrow">Mobile shortcut</div><h2>Add Requests or Jellyfin to your home screen</h2>
         <p>For quick access, add each website to your phone's home screen like an app.</p>
         <div class="grid"><div><h3>iPhone / iPad</h3><ol><li>Open the site in Safari.</li><li>Tap the Share button.</li><li>Choose <strong>Add to Home Screen</strong>.</li><li>Tap <strong>Add</strong>.</li></ol></div><div><h3>Android</h3><ol><li>Open the site in Chrome.</li><li>Tap the three-dot menu.</li><li>Choose <strong>Add to Home screen</strong> or <strong>Install app</strong>.</li><li>Confirm.</li></ol></div></div>
-        <div class="placeholder">Screenshot: Add to Home Screen prompt</div>
       </section>
     </main>
-    <aside class="card toc"><div class="eyebrow">Quick links</div><a href="#jellyfin">Jellyfin setup</a><a href="#seerr">Request media with Seerr</a><a href="#home-screen">Add to home screen</a><a href="{{ jellyfin_url }}">Open Jellyfin</a><a href="{{ requests_url }}">Open Requests</a><p class="small">Need help? Send Pierce the device/browser, what step failed, and a screenshot of the error.</p></aside>
+    <aside class="card toc"><div class="eyebrow">Quick links</div><a href="#jellyfin">Jellyfin setup</a><a href="#requests">Request media</a><a href="#home-screen">Add to home screen</a><a href="{{ jellyfin_url }}">Open Jellyfin</a><a href="{{ requests_url }}">Open Requests</a><p class="small">Need help? Send Pierce the device/browser, what step failed, and a screenshot of the error.</p></aside>
   </div>
 </div>
 {% endblock %}
