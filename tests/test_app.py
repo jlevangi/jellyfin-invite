@@ -48,6 +48,8 @@ def test_guide_page_renders_core_sections(client):
     assert b"Page sections" in res.data
     assert b"QuickConnect" in res.data
     assert b"jellyfin-login.jpg" in res.data
+    assert b"jellyfin-server-address.jpg" in res.data
+    assert b"jellyfin-sign-in-options.jpg" in res.data
     assert b"jellyfin-quick-connect.jpg" in res.data
     assert b"immich-quick-connect.jpg" in res.data
     assert b"Keycloak" not in res.data

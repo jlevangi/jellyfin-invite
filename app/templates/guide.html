@@ -26,18 +26,33 @@
           <div class="step"><div class="num">2</div><div><strong>Sign in with your media account.</strong><br>Use the email and password from your account setup. If you used Google when creating the account, choose Google again.</div></div>
           <div class="step"><div class="num">3</div><div><strong>Browse or search.</strong><br>Pick a movie or show, then press <strong>Play</strong>.</div></div>
         </div>
-        <figure class="guide-shot">
-          <img src="{{ url_for('static', filename='img/jellyfin-login.jpg') }}" alt="Jellyfin login screen with sign-in options">
-          <figcaption>Jellyfin sign-in screen</figcaption>
-        </figure>
+        <div class="shot-grid">
+          <figure class="guide-shot">
+            <img src="{{ url_for('static', filename='img/jellyfin-server-address.jpg') }}" alt="Jellyfin server address screen">
+            <figcaption>Enter the server address</figcaption>
+          </figure>
+          <figure class="guide-shot">
+            <img src="{{ url_for('static', filename='img/jellyfin-sign-in-options.jpg') }}" alt="Jellyfin sign-in options screen">
+            <figcaption>Choose the sign-in option</figcaption>
+          </figure>
+        </div>
         <h3>TV login works differently</h3>
         <p>Phones, tablets, and computers can open the normal browser login directly. TVs and streaming devices are harder with a remote, so use <strong>QuickConnect</strong>.</p>
         <div class="steps">
           <div class="step"><div class="num">1</div><div>Sign in to Jellyfin on your phone, tablet, or computer first.</div></div>
-          <div class="step"><div class="num">2</div><div>Open the Jellyfin app on the TV and choose <strong>QuickConnect</strong> or <strong>Quick Connect</strong>.</div></div>
-          <div class="step"><div class="num">3</div><div>Enter the TV code from your already-signed-in phone or computer, then approve the connection.</div></div>
+          <div class="step"><div class="num">2</div><div>If the TV asks for a server address, enter <strong>{{ jellyfin_url }}</strong>.</div></div>
+          <div class="step"><div class="num">3</div><div>Choose <strong>QuickConnect</strong> or <strong>Quick Connect</strong>.</div></div>
+          <div class="step"><div class="num">4</div><div>Enter the TV code from your already-signed-in phone or computer, then approve the connection.</div></div>
         </div>
         <div class="shot-grid">
+          <figure class="guide-shot">
+            <img src="{{ url_for('static', filename='img/jellyfin-server-address.jpg') }}" alt="Jellyfin server address screen">
+            <figcaption>Enter the server address on TV too</figcaption>
+          </figure>
+          <figure class="guide-shot">
+            <img src="{{ url_for('static', filename='img/jellyfin-login.jpg') }}" alt="Jellyfin login screen with Quick Connect option">
+            <figcaption>TV sign-in screen</figcaption>
+          </figure>
           <figure class="guide-shot">
             <img src="{{ url_for('static', filename='img/jellyfin-quick-connect.jpg') }}" alt="Jellyfin Quick Connect screen">
             <figcaption>Jellyfin Quick Connect</figcaption>
