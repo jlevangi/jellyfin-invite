@@ -38,8 +38,65 @@ def need_admin():
     return None
 
 
-def invite_is_invalid(invite):
-    return not invite or invite["used_at"] or invite["revoked_at"] or invite["expires_at"] <= now()
+def invite_is_invalid(con, invite):
+    if not invite or invite["revoked_at"] or invite["expires_at"] <= now():
+        return True
+    use_count = con.execute(
+        """select
+           (select count(*) from invite_redemptions where invite_code=?) +
+           (select count(*) from invite_reservations where invite_code=?)""",
+        (invite["code"], invite["code"]),
+    ).fetchone()[0]
+    return use_count >= invite["max_uses"]
+
+
+def reserve_redemption(code):
+    reservation = secrets.token_urlsafe(18)
+    with get_db() as con:
+        con.execute("begin immediate")
+        invite = con.execute("select * from invite_codes where code=?", (code,)).fetchone()
+        if invite_is_invalid(con, invite):
+            return None
+        con.execute(
+            "insert into invite_reservations(id,invite_code,created_at) values(?,?,?)",
+            (reservation, code, now()),
+        )
+    return reservation
+
+
+def release_reservation(reservation):
+    with get_db() as con:
+        con.execute("delete from invite_reservations where id=?", (reservation,))
+
+
+def record_redemption(reservation, code, email, subject=None):
+    redeemed_at = now()
+    with get_db() as con:
+        con.execute("begin immediate")
+        claimed = con.execute(
+            "delete from invite_reservations where id=? and invite_code=?", (reservation, code)
+        )
+        if claimed.rowcount != 1:
+            raise RuntimeError("Invite reservation was lost")
+        con.execute(
+            "insert into invite_redemptions(invite_code,redeemed_at,email,subject) values(?,?,?,?)",
+            (code, redeemed_at, email, subject),
+        )
+        con.execute(
+            """update invite_codes set used_at=coalesce(used_at,?),
+               used_by_email=coalesce(used_by_email,?), used_by_subject=coalesce(used_by_subject,?)
+               where code=?""",
+            (redeemed_at, email, subject, code),
+        )
+
+
+def bounded_integer(data, key, default, minimum, maximum):
+    value = data.get(key, default)
+    if type(value) is str and value.isascii() and value.isdigit():
+        value = int(value)
+    if type(value) is not int:
+        return None
+    return value if minimum <= value <= maximum else None
 
 
 def success_message():
@@ -73,7 +130,8 @@ def oidc_start(code):
     code = code.strip().upper()
     with get_db() as con:
         invite = con.execute("select * from invite_codes where code=?", (code,)).fetchone()
-    if invite_is_invalid(invite):
+        invalid = invite_is_invalid(con, invite)
+    if invalid:
         return render_template("join.html", code=code, error="Invite code is invalid, expired, used, or revoked."), 403
 
     state = state_serializer().dumps({"code": code, "nonce": secrets.token_urlsafe(16)})
@@ -113,18 +171,15 @@ def oidc_callback():
     if not subject or not email or user.get("email_verified") is False:
         return render_template("join.html", code=code, error="Keycloak did not return a verified email for this account."), 403
 
-    with get_db() as con:
-        con.execute("begin immediate")
-        invite = con.execute("select * from invite_codes where code=?", (code,)).fetchone()
-        if invite_is_invalid(invite):
-            return render_template("join.html", code=code, error="Invite code is invalid, expired, used, or revoked."), 403
+    reservation = reserve_redemption(code)
+    if not reservation:
+        return render_template("join.html", code=code, error="Invite code is invalid, expired, used, or revoked."), 403
+    try:
         kc.grant_existing_user(subject)
-        cur = con.execute(
-            "update invite_codes set used_at=?, used_by_email=?, used_by_subject=? where code=?",
-            (now(), email, subject, code),
-        )
-        if cur.rowcount != 1:
-            raise RuntimeError("Invite update failed")
+    except Exception:
+        release_reservation(reservation)
+        raise
+    record_redemption(reservation, code, email, subject)
     return render_template("success.html", message=success_message())
 
 
@@ -139,13 +194,16 @@ def create_invite():
     if auth:
         return auth
     data = request.get_json(silent=True) or {}
-    days = max(1, min(90, int(data.get("expiresDays") or 14)))
+    days = bounded_integer(data, "expiresDays", 14, 1, 90)
+    max_uses = bounded_integer(data, "maxUses", 1, 1, 25)
+    if days is None or max_uses is None:
+        return jsonify(ok=False, message="Expiry must be 1–90 days and maximum uses must be 1–25."), 400
     code = secrets.token_urlsafe(9).replace("-", "").replace("_", "")[:12].upper()
     expires = (dt.datetime.now(dt.UTC) + dt.timedelta(days=days)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     with get_db() as con:
         con.execute(
-            "insert into invite_codes(code,note,created_at,expires_at) values(?,?,?,?)",
-            (code, data.get("note", "")[:200], now(), expires),
+            "insert into invite_codes(code,note,created_at,expires_at,max_uses) values(?,?,?,?,?)",
+            (code, str(data.get("note", ""))[:200], now(), expires, max_uses),
         )
     return jsonify(ok=True, code=code, url=f"{current_app.config['PUBLIC_BASE_URL']}/j/{code}")
 
@@ -156,7 +214,14 @@ def list_invites():
     if auth:
         return auth
     with get_db() as con:
-        return jsonify(ok=True, invites=rows(con.execute("select * from invite_codes order by created_at desc limit 200")))
+        invites = rows(con.execute("select * from invite_codes order by created_at desc limit 200"))
+        for invite in invites:
+            invite["redemptions"] = rows(con.execute(
+                "select redeemed_at,email,subject from invite_redemptions where invite_code=? order by id",
+                (invite["code"],),
+            ))
+            invite["use_count"] = len(invite["redemptions"])
+        return jsonify(ok=True, invites=invites)
 
 
 @bp.post("/api/admin/invites/<code>/revoke")
@@ -166,7 +231,7 @@ def revoke_invite(code):
         return auth
     with get_db() as con:
         con.execute(
-            "update invite_codes set revoked_at=coalesce(revoked_at,?) where code=? and used_at is null",
+            "update invite_codes set revoked_at=coalesce(revoked_at,?) where code=?",
             (now(), code.upper()),
         )
     return jsonify(ok=True)
@@ -179,13 +244,13 @@ def activate():
     code = (data.get("code") or "").strip().upper()
     if not EMAIL_RE.fullmatch(email) or not code:
         return jsonify(ok=False, message="Email and invite code are required."), 400
-    with get_db() as con:
-        con.execute("begin immediate")
-        invite = con.execute("select * from invite_codes where code=?", (code,)).fetchone()
-        if invite_is_invalid(invite):
-            return jsonify(ok=False, message="Invite code is invalid, expired, used, or revoked."), 403
+    reservation = reserve_redemption(code)
+    if not reservation:
+        return jsonify(ok=False, message="Invite code is invalid, expired, used, or revoked."), 403
+    try:
         created = keycloak().activate(email)
-        cur = con.execute("update invite_codes set used_at=?, used_by_email=? where code=?", (now(), email, code))
-        if cur.rowcount != 1:
-            raise RuntimeError("Invite update failed")
+    except Exception:
+        release_reservation(reservation)
+        raise
+    record_redemption(reservation, code, email)
     return jsonify(ok=True, created=created, message=success_message())

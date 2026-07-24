@@ -1,6 +1,10 @@
 import urllib.parse
+import sqlite3
+
+import pytest
 
 import app.routes as routes
+from app.db import connect
 
 
 class FakeKeycloak:
@@ -85,6 +89,7 @@ def test_admin_requires_token(client):
     assert b"Admin password" in page.data
     assert b"Invite note" in page.data
     assert b"Expires after" in page.data
+    assert b"Maximum uses" in page.data
     assert b"days" in page.data
 
     res = client.get("/api/admin/invites")
@@ -93,7 +98,7 @@ def test_admin_requires_token(client):
 
 
 def test_admin_create_list_and_revoke_invite(client):
-    created = client.post("/api/admin/invites", json={"note": "friend", "expiresDays": 7}, headers=auth())
+    created = client.post("/api/admin/invites", json={"note": "friend", "expiresDays": 7, "maxUses": 3}, headers=auth())
     assert created.status_code == 200
     assert created.json["ok"] is True
     assert created.json["url"].startswith("https://join.example.test/j/")
@@ -103,11 +108,23 @@ def test_admin_create_list_and_revoke_invite(client):
     assert listed.status_code == 200
     assert listed.json["invites"][0]["code"] == code
     assert listed.json["invites"][0]["note"] == "friend"
+    assert listed.json["invites"][0]["max_uses"] == 3
+    assert listed.json["invites"][0]["use_count"] == 0
+    assert listed.json["invites"][0]["redemptions"] == []
 
     revoked = client.post(f"/api/admin/invites/{code}/revoke", headers=auth())
     assert revoked.status_code == 200
     listed = client.get("/api/admin/invites", headers=auth())
     assert listed.json["invites"][0]["revoked_at"] is not None
+
+
+def test_create_invite_rejects_invalid_limits(client):
+    for max_uses in (0, 26, "many", True, 1.5):
+        res = client.post("/api/admin/invites", json={"maxUses": max_uses}, headers=auth())
+        assert res.status_code == 400
+    for days in (0, 91, "later", True, 1.5):
+        res = client.post("/api/admin/invites", json={"expiresDays": days}, headers=auth())
+        assert res.status_code == 400
 
 
 def test_activation_rejects_bad_inputs(client):
@@ -135,11 +152,80 @@ def test_activation_marks_invite_used(client, monkeypatch):
 
     listed = client.get("/api/admin/invites", headers=auth())
     invite = listed.json["invites"][0]
-    assert invite["used_at"] is not None
-    assert invite["used_by_email"] == "user@example.test"
+    assert invite["use_count"] == 1
+    assert invite["max_uses"] == 1
+    assert invite["redemptions"][0]["email"] == "user@example.test"
 
     reused = client.post("/api/activate", json={"email": "other@example.test", "code": code})
     assert reused.status_code == 403
+
+
+def test_reusable_invite_tracks_redemptions_and_exhausts(client, monkeypatch):
+    monkeypatch.setattr(routes, "Keycloak", FakeKeycloak)
+    created = client.post("/api/admin/invites", json={"note": "family", "maxUses": 3}, headers=auth())
+    code = created.json["code"]
+
+    for number in range(3):
+        res = client.post("/api/activate", json={"email": f"user{number}@example.test", "code": code})
+        assert res.status_code == 200
+
+    exhausted = client.post("/api/activate", json={"email": "extra@example.test", "code": code})
+    assert exhausted.status_code == 403
+
+    invite = client.get("/api/admin/invites", headers=auth()).json["invites"][0]
+    assert invite["use_count"] == 3
+    assert invite["max_uses"] == 3
+    assert [item["email"] for item in invite["redemptions"]] == [
+        "user0@example.test", "user1@example.test", "user2@example.test"
+    ]
+
+
+def test_partially_used_invite_can_be_revoked(client, monkeypatch):
+    monkeypatch.setattr(routes, "Keycloak", FakeKeycloak)
+    code = client.post("/api/admin/invites", json={"maxUses": 3}, headers=auth()).json["code"]
+    assert client.post("/api/activate", json={"email": "first@example.test", "code": code}).status_code == 200
+    assert client.post(f"/api/admin/invites/{code}/revoke", headers=auth()).status_code == 200
+    assert client.post("/api/activate", json={"email": "second@example.test", "code": code}).status_code == 403
+
+
+def test_failed_activation_releases_reserved_use(client, monkeypatch):
+    class FailingKeycloak(FakeKeycloak):
+        def activate(self, email):
+            raise RuntimeError("Keycloak unavailable")
+
+    monkeypatch.setattr(routes, "Keycloak", FailingKeycloak)
+    code = client.post("/api/admin/invites", json={"maxUses": 1}, headers=auth()).json["code"]
+    with pytest.raises(RuntimeError):
+        client.post("/api/activate", json={"email": "failed@example.test", "code": code})
+    invite = client.get("/api/admin/invites", headers=auth()).json["invites"][0]
+    assert invite["use_count"] == 0
+    assert invite["redemptions"] == []
+
+
+def test_schema_backfills_existing_used_invite(tmp_path):
+    path = tmp_path / "legacy.sqlite3"
+    con = sqlite3.connect(path)
+    con.execute("""create table invite_codes(
+        code text primary key, note text, created_at text not null, expires_at text not null,
+        used_at text, used_by_email text, revoked_at text, used_by_subject text)""")
+    con.execute(
+        "insert into invite_codes values(?,?,?,?,?,?,?,?)",
+        ("LEGACY", "old", "2026-01-01T00:00:00Z", "2027-01-01T00:00:00Z",
+         "2026-02-01T00:00:00Z", "legacy@example.test", None, "legacy-subject"),
+    )
+    con.commit()
+    con.close()
+
+    with connect(path) as migrated:
+        invite = migrated.execute("select max_uses from invite_codes where code='LEGACY'").fetchone()
+        redemptions = migrated.execute("select * from invite_redemptions where invite_code='LEGACY'").fetchall()
+    assert invite["max_uses"] == 1
+    assert len(redemptions) == 1
+    assert redemptions[0]["email"] == "legacy@example.test"
+
+    with connect(path) as migrated_again:
+        count = migrated_again.execute("select count(*) from invite_redemptions where invite_code='LEGACY'").fetchone()[0]
+    assert count == 1
 
 
 def test_oidc_invite_flow_grants_existing_keycloak_user(client, monkeypatch):

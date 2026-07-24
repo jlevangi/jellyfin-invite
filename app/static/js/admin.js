@@ -12,10 +12,9 @@ async function api(url, options = {}) {
 }
 
 function state(invite) {
-  const current = new Date();
   if (invite.revoked_at) return 'revoked';
-  if (invite.used_at) return 'used';
-  if (new Date(invite.expires_at) < current) return 'expired';
+  if (new Date(invite.expires_at) < new Date()) return 'expired';
+  if (invite.use_count >= invite.max_uses) return 'exhausted';
   return 'active';
 }
 
@@ -30,10 +29,35 @@ async function copy(value) {
   say('Invite link copied');
 }
 
-function cell(text) {
+function cell(label, content = '') {
   const td = document.createElement('td');
-  td.textContent = text || '';
+  td.dataset.label = label;
+  if (content instanceof Node) td.append(content);
+  else td.textContent = content;
   return td;
+}
+
+function usage(invite) {
+  const wrap = document.createElement('div');
+  const count = document.createElement('strong');
+  count.className = 'usage-count';
+  count.textContent = `${invite.use_count} of ${invite.max_uses} used`;
+  wrap.append(count);
+  if (invite.redemptions.length) {
+    const details = document.createElement('details');
+    details.className = 'redemptions';
+    const summary = document.createElement('summary');
+    summary.textContent = `View ${invite.use_count} redemption${invite.use_count === 1 ? '' : 's'}`;
+    const list = document.createElement('ul');
+    invite.redemptions.forEach(redemption => {
+      const item = document.createElement('li');
+      item.textContent = `${redemption.email} — ${new Date(redemption.redeemed_at).toLocaleString()}`;
+      list.append(item);
+    });
+    details.append(summary, list);
+    wrap.append(details);
+  }
+  return wrap;
 }
 
 function row(invite) {
@@ -41,43 +65,48 @@ function row(invite) {
   const url = 'https://join.levangie.dev/j/' + invite.code;
   const tr = document.createElement('tr');
 
-  const statusCell = document.createElement('td');
   const pill = document.createElement('span');
   pill.className = 'pill ' + status;
   pill.textContent = status;
-  statusCell.append(pill);
-  tr.append(statusCell);
+  tr.append(cell('Status', pill));
 
-  const linkCell = document.createElement('td');
   const copyButton = document.createElement('button');
   copyButton.className = 'invite-link';
-  copyButton.title = 'Click to copy';
+  copyButton.title = 'Copy invite link';
   copyButton.textContent = url;
   copyButton.addEventListener('click', () => copy(url));
-  linkCell.append(copyButton);
-  tr.append(linkCell);
+  tr.append(cell('Invite link', copyButton));
 
-  tr.append(cell(invite.note));
-  tr.append(cell(new Date(invite.expires_at).toLocaleString()));
-  tr.append(cell(invite.used_by_email));
+  tr.append(cell('Note', invite.note || '—'));
+  tr.append(cell('Expires', new Date(invite.expires_at).toLocaleString()));
+  tr.append(cell('Usage', usage(invite)));
 
-  const actions = document.createElement('td');
+  const actions = document.createElement('div');
+  actions.className = 'row-actions';
   if (status === 'active') {
     const revokeButton = document.createElement('button');
     revokeButton.className = 'danger';
     revokeButton.textContent = 'Revoke';
     revokeButton.addEventListener('click', () => revoke(invite.code));
     actions.append(revokeButton);
+  } else {
+    actions.textContent = '—';
   }
-  tr.append(actions);
+  tr.append(cell('Actions', actions));
   return tr;
 }
 
 function counts(items) {
-  const count = {active: 0, used: 0, expired: 0, revoked: 0};
-  items.forEach(invite => count[state(invite)]++);
+  const count = {active: 0, expired: 0, revoked: 0, redemptions: 0};
+  items.forEach(invite => {
+    const status = state(invite);
+    if (status === 'active') count.active++;
+    if (status === 'expired') count.expired++;
+    if (status === 'revoked') count.revoked++;
+    count.redemptions += invite.use_count;
+  });
   activeCount.textContent = count.active;
-  usedCount.textContent = count.used;
+  redemptionCount.textContent = count.redemptions;
   expiredCount.textContent = count.expired;
   revokedCount.textContent = count.revoked;
 }
@@ -89,6 +118,7 @@ async function unlock() {
     login.classList.add('hidden');
     app.classList.remove('hidden');
   } catch (error) {
+    sessionStorage.removeItem('inviteToken');
     loginStatus.textContent = error.message;
   }
 }
@@ -106,9 +136,9 @@ async function list() {
   out.replaceChildren(...json.invites.map(row));
   if (!json.invites.length) {
     const tr = document.createElement('tr');
-    const td = cell('No invites yet.');
+    const td = cell('', 'No invites yet.');
     td.colSpan = 6;
-    td.className = 'muted';
+    td.className = 'muted empty';
     tr.append(td);
     out.append(tr);
   }
@@ -116,7 +146,10 @@ async function list() {
 
 async function create() {
   try {
-    const json = await api('/api/admin/invites', {method: 'POST', body: JSON.stringify({note: note.value, expiresDays: days.value})});
+    const json = await api('/api/admin/invites', {
+      method: 'POST',
+      body: JSON.stringify({note: note.value, expiresDays: days.value, maxUses: maxUses.value}),
+    });
     status.textContent = 'Created ' + json.url;
     await copy(json.url);
     note.value = '';
@@ -137,5 +170,6 @@ unlockBtn.addEventListener('click', unlock);
 refreshBtn.addEventListener('click', list);
 lockBtn.addEventListener('click', lock);
 createBtn.addEventListener('click', create);
+token.addEventListener('keydown', event => { if (event.key === 'Enter') unlock(); });
 
 if (token.value) unlock();
