@@ -71,11 +71,19 @@ function row(invite) {
   tr.append(cell('Status', pill));
 
   const copyButton = document.createElement('button');
-  copyButton.className = 'invite-link';
+  copyButton.className = 'invite-link-btn';
   copyButton.title = 'Copy invite link';
-  copyButton.textContent = url;
+  copyButton.setAttribute('aria-label', 'Copy invite link');
+  copyButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copy invite link</span>';
   copyButton.addEventListener('click', () => copy(url));
-  tr.append(cell('Invite link', copyButton));
+  const linkCell = document.createElement('td');
+  linkCell.dataset.label = 'Invite link';
+  linkCell.className = 'link-cell';
+  const codeSpan = document.createElement('code');
+  codeSpan.className = 'invite-code';
+  codeSpan.textContent = invite.code;
+  linkCell.append(codeSpan, copyButton);
+  tr.append(linkCell);
 
   tr.append(cell('Note', invite.note || '—'));
   tr.append(cell('Expires', new Date(invite.expires_at).toLocaleString()));
@@ -85,14 +93,14 @@ function row(invite) {
   actions.className = 'row-actions';
   if (status === 'active') {
     const revokeButton = document.createElement('button');
-    revokeButton.className = 'danger';
+    revokeButton.className = 'secondary';
     revokeButton.textContent = 'Revoke';
     revokeButton.addEventListener('click', () => revoke(invite.code));
     actions.append(revokeButton);
+    tr.append(cell('Actions', actions));
   } else {
-    actions.textContent = '—';
+    tr.append(cell('Actions', ''));
   }
-  tr.append(cell('Actions', actions));
   return tr;
 }
 
