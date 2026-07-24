@@ -49,7 +49,10 @@ def test_guide_page_renders_core_sections(client):
     assert b"TV sign-in with QuickConnect" in res.data
     assert b"download the Jellyfin app on your phone" in res.data
     assert b"Download the Jellyfin app on your TV" in res.data
-    assert b"accept your invite and finish creating your account" in res.data
+    assert b"accept your invite and finish creating your account" not in res.data
+    assert res.data.count(b'<details class="walkthrough">') == 2
+    assert res.data.count(b"Expand walkthrough images") == 2
+    assert b'<details class="walkthrough" open>' not in res.data
     assert b"Page sections" in res.data
     assert b"QuickConnect" in res.data
     assert b"jellyfin-login.jpg" in res.data
