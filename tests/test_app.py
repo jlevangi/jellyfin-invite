@@ -64,7 +64,7 @@ def test_guide_page_renders_core_sections(client):
     assert b"jellyfin-sign-in-options.jpg" in res.data
     assert b"jellyfin-quick-connect.jpg" in res.data
     assert b"immich-quick-connect.jpg" in res.data
-    assert b"Keycloak" not in res.data
+    assert res.data.count(b"Choose Sign in with Keycloak.") == 2
     assert b"Add Requests or Jellyfin to your home screen" in res.data
     assert b"https://jellyfin.example.test" in res.data
     assert b"https://request.example.test" in res.data
@@ -244,7 +244,7 @@ def test_oidc_invite_flow_grants_existing_keycloak_user(client, monkeypatch):
     callback = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": params["state"][0]}))
     assert callback.status_code == 200
     assert b"Access granted" in callback.data
-    assert b"https://request.levangie.dev" in callback.data
+    assert b"https://request.example.test" in callback.data
     assert ("grant", "keycloak-user-id") in FakeKeycloak.calls
 
     listed = client.get("/api/admin/invites", headers=auth())
