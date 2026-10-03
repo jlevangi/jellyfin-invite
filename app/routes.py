@@ -102,7 +102,9 @@ def bounded_integer(data, key, default, minimum, maximum):
 def success_message():
     return (
         "Jellyfin access granted.\n\n"
-        "Your account is ready for:\n- jellyfin.levangie.org\n- request.levangie.org"
+        "Your account is ready for:\n"
+        f"- {current_app.config['JELLYFIN_URL']}\n"
+        f"- {current_app.config['REQUESTS_URL']}"
     )
 
 

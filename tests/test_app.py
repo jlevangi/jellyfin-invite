@@ -244,6 +244,7 @@ def test_oidc_invite_flow_grants_existing_keycloak_user(client, monkeypatch):
     callback = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": params["state"][0]}))
     assert callback.status_code == 200
     assert b"Access granted" in callback.data
+    assert b"https://request.levangie.dev" in callback.data
     assert ("grant", "keycloak-user-id") in FakeKeycloak.calls
 
     listed = client.get("/api/admin/invites", headers=auth())
