@@ -59,9 +59,22 @@
       show(current);
     }
   }
+  const copyAddress = root.querySelector('#copyJellyfinAddress');
+  copyAddress?.addEventListener('click', async () => {
+    const value = root.querySelector('#jellyfinAddress').textContent.trim();
+    const status = root.querySelector('#copyAddressStatus');
+    status.textContent = '';
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(value);
+      status.textContent = 'Copied. Paste this address into Jellyfin.';
+    } catch {
+      status.textContent = 'Could not copy automatically. Select and copy the address above.';
+    }
+  });
 
   root.addEventListener('click', event => {
-    const link = event.target.closest('.guide-sections a, .welcome-actions a');
+    const link = event.target.closest('.guide-sections a, .welcome-actions a, .welcome-services a');
     if (link) {
       event.preventDefault();
       void move(sections.indexOf(link.hash.slice(1)));
