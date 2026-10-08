@@ -3,13 +3,23 @@
 {% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/guide.css') }}">{% endblock %}
 {% block body %}
 <div class="wrap guide-walkthrough" data-authenticated="{{ 'true' if authenticated else 'false' }}" data-resume-step="{{ 1 if authenticated else '' }}">
-  <section class="hero card guide-intro" aria-labelledby="intro-title">
+  <div class="guide-intro" aria-labelledby="intro-title">
+    <section class="hero card welcome-start">
     <div class="eyebrow">Pierce's media setup</div>
     <h1 id="intro-title">Set up your media access</h1>
     <p>Sign in, add Seerr to your phone, then get ready to watch in Jellyfin.</p>
     <div class="welcome-actions"><button class="btn" id="startGuide" type="button">Get Started</button></div>
-    <nav class="welcome-services" aria-label="Guide sections"><a href="#sign-in"><img src="{{ url_for('static', filename='img/keycloak-logo.svg') }}" alt=""><span>Keycloak · Signing in</span></a><a href="#seerr"><img src="{{ url_for('static', filename='img/seerr-logo.svg') }}" alt=""><span>Seerr · Requests</span></a><a href="#jellyfin"><img src="{{ url_for('static', filename='img/jellyfin-logo.png') }}" alt=""><span>Jellyfin · Watching</span></a></nav>
-  </section>
+    </section>
+    <section class="card welcome-shortcuts" aria-labelledby="shortcuts-title">
+      <h2 id="shortcuts-title">Jump to a section</h2>
+      <p>Already started? Pick up where you need help.</p>
+      <nav class="welcome-services" aria-label="Guide sections">
+        <a href="#sign-in"><img src="{{ url_for('static', filename='img/keycloak-logo.svg') }}" alt=""><span><strong>Signing in</strong><small>Keycloak</small></span><span class="shortcut-arrow" aria-hidden="true">&#8594;</span></a>
+        <a href="#seerr"><img src="{{ url_for('static', filename='img/seerr-logo.svg') }}" alt=""><span><strong>Requests</strong><small>Seerr</small></span><span class="shortcut-arrow" aria-hidden="true">&#8594;</span></a>
+        <a href="#jellyfin"><img src="{{ url_for('static', filename='img/jellyfin-logo.png') }}" alt=""><span><strong>Watching</strong><small>Jellyfin</small></span><span class="shortcut-arrow" aria-hidden="true">&#8594;</span></a>
+      </nav>
+    </section>
+  </div>
   <div class="guide-dock">
     <nav class="guide-sections" aria-label="Guide sections">
       <a href="#sign-in">1 Signing in</a>
