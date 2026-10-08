@@ -21,7 +21,7 @@
     try { sessionStorage.setItem('guide-step', String(current)); } catch {}
     history.replaceState(null, '', `${location.pathname}${location.search}${current === -1 ? '' : '#' + sections[current]}`);
     sectionMenu.querySelectorAll('a').forEach(link => {
-      const activeSection = current <= 1 ? 'sign-in' : current === 2 ? 'seerr' : 'jellyfin';
+      const activeSection = current === 0 ? 'sign-in' : current === 1 ? 'seerr' : 'jellyfin';
       if (current !== -1 && link.hash === '#' + activeSection) link.setAttribute('aria-current', 'step');
       else link.removeAttribute('aria-current');
     });
