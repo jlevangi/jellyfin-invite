@@ -33,12 +33,13 @@
       <div class="eyebrow">Welcome</div><h2 id="welcome-title">{% if authenticated %}Welcome back!{% else %}First, sign in to confirm your account{% endif %}</h2>
       {% if authenticated %}
       <div class="msg ok" role="status"><p><strong>You’re logged in!</strong></p><p>Continue to Seerr setup.</p></div>
+      <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><button class="btn next-step" type="button">Continue</button></div>
       {% else %}
       <p>Tap <strong>Sign in with Keycloak</strong> below. Use your Google or email account. This is the account you'll use to sign into everything.</p>
       <a class="sso-example" href="{{ url_for('main.oidc_sign_in') }}">Sign in with Keycloak</a>
       <p class="small">New here? Use the invite link Pierce sent you to join, or choose email signup on that page.</p>
+      <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><button class="btn secondary next-step" type="button">Log in above to continue</button></div>
       {% endif %}
-      <div class="step-actions"><span></span><button class="btn secondary next-step" type="button">Continue</button></div>
     </section>
     <section class="card guide-step" data-step="1" aria-labelledby="requests-title" hidden>
       <div class="service-brand"><img class="seerr-logo" src="{{ url_for('static', filename='img/seerr-logo.svg') }}" alt="Seerr logo" width="48" height="48"><div><div class="service-name">Seerr</div><span>Request stuff</span></div></div>
@@ -47,7 +48,7 @@
       <div class="welcome-services"><a href="{{ requests_url }}" target="_blank" rel="noopener"><img src="{{ url_for('static', filename='img/seerr-logo.svg') }}" alt=""><span><strong>Open Seerr</strong><small>{{ requests_url }}</small></span></a></div>
       <div class="grid install-grid"><div><h3>iPhone or iPad</h3><ol><li>Open Seerr in <strong>Safari</strong>.</li><li>Tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.</li><li>Tap <strong>Add</strong>. If the option is missing, use Safari and scroll the Share list.</li></ol></div><div><h3>Android</h3><ol><li>Open Seerr in <strong>Chrome</strong>.</li><li>Tap the three-dot menu, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li><li>Confirm the prompt. The browser may use different wording.</li></ol></div></div>
       <h2>Request something</h2><ol><li>Search for a movie or show.</li><li>Open a result and select <strong>Request</strong>.</li><li><strong>Pending</strong> means processing; <strong>Approved</strong> means accepted; <strong>Available</strong> means ready in Jellyfin. Popular releases may take about 30 minutes; niche items can take a day or two.</li></ol>
-      <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><button class="btn next-step" type="button">Done</button></div>
+      <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><button class="btn next-step" type="button">Next</button></div>
     </section>
     <section class="card guide-step" data-step="2" aria-labelledby="jellyfin-title" hidden>
       <div class="service-brand"><img src="{{ url_for('static', filename='img/jellyfin-logo.png') }}" alt="Jellyfin logo" width="48" height="48"><div><div class="service-name">Jellyfin</div><span>Watch stuff</span></div></div>
