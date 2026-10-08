@@ -29,7 +29,7 @@
       const heading = current === -1 ? intro.querySelector('h1') : steps[current].querySelector('h2');
       heading.tabIndex = -1;
       heading.focus({ preventScroll: true });
-      window.scrollTo({ top: 0, behavior: 'instant' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
@@ -42,6 +42,7 @@
     const outgoing = current === -1 ? intro : steps[current];
     const oldHeight = outgoing.getBoundingClientRect().height;
     try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       await outgoing.animate([{ opacity: 1, transform: 'translateX(0)' }, { opacity: 0, transform: `translateX(${-direction * 20}px)` }], { duration: 130, easing: 'ease-in' }).finished;
       show(n, false);
       const incoming = current === -1 ? intro : steps[current];
@@ -55,7 +56,10 @@
     } finally {
       panel.style.overflow = '';
       moving = false;
-      show(current);
+      show(current, false);
+      const heading = current === -1 ? intro.querySelector('h1') : steps[current].querySelector('h2');
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
     }
   }
   const copyAddress = root.querySelector('#copyJellyfinAddress');
