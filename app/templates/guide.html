@@ -2,99 +2,60 @@
 {% block title %}Jellyfin and Requests Guide{% endblock %}
 {% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/guide.css') }}">{% endblock %}
 {% block body %}
-<div class="wrap">
-  <section class="hero">
-    <div class="card">
-      <div class="eyebrow">Pierce's media setup</div>
-      <h1>Watch Jellyfin. Request new media.</h1>
-      <p class="lede">This page walks you through signing in, watching media, requesting new movies and shows, and getting Jellyfin onto your phone or TV.</p>
-      <nav class="section-links" aria-label="Page sections">
-        <a href="#jellyfin"><span>1</span> Using Jellyfin</a>
-        <a href="#requests"><span>2</span> Request media</a>
-        <a href="#home-screen"><span>3</span> Add to home screen</a>
-      </nav>
-    </div>
+<div class="wrap guide-walkthrough" data-authenticated="{{ 'true' if authenticated else 'false' }}" data-resume-step="{{ 1 if authenticated else '' }}">
+  <section class="hero card guide-intro" aria-labelledby="intro-title">
+    <div class="eyebrow">Pierce's media setup</div>
+    <h1 id="intro-title">Set up your media access</h1>
+    <p>Sign in, add Seerr to your phone, then get ready to watch in Jellyfin.</p>
+    <div class="welcome-actions"><button class="btn" id="startGuide" type="button">Get Started</button><a class="btn secondary" href="#sign-in">Sign in</a><a class="btn secondary" href="#seerr">Requests</a><a class="btn secondary" href="#jellyfin">Watching</a></div>
   </section>
-  <div class="grid">
-    <main>
-      <section id="jellyfin" class="card section">
-        <div class="eyebrow">Jellyfin</div><h2>Using Jellyfin</h2>
-        <p>Jellyfin is where you watch the movies and shows already available in Pierce's library.</p>
-        <nav class="subsection-links" aria-label="Jellyfin sign-in sections">
-          <a href="#jellyfin-mobile">Mobile device or computer sign-in</a>
-          <a href="#jellyfin-tv">TV sign-in with QuickConnect</a>
-        </nav>
-        <h3 id="jellyfin-mobile">Mobile device or computer sign-in</h3>
-        <div class="steps">
-          <div class="step"><div class="num">1</div><div><strong>Open Jellyfin.</strong><br>Click <a href="{{ jellyfin_url }}">{{ jellyfin_url }}</a>, or download the Jellyfin app on your phone and enter that server address.</div></div>
-          <div class="step"><div class="num">2</div><div><strong>Choose Sign in with Keycloak.</strong><br>Do not type into Jellyfin's username and password boxes. On the Keycloak page, choose Google if you joined with Google; otherwise use the email and password you set up.</div></div>
-          <div class="step"><div class="num">3</div><div><strong>Browse or search.</strong><br>Pick a movie or show, then press <strong>Play</strong>.</div></div>
-        </div>
-        <details class="walkthrough">
-          <summary>Expand walkthrough images</summary>
-          <div class="shot-grid">
-            <figure class="guide-shot">
-              <img src="{{ url_for('static', filename='img/jellyfin-server-address.jpg') }}" alt="Jellyfin server address screen">
-              <figcaption>Enter the server address</figcaption>
-            </figure>
-            <figure class="guide-shot">
-              <img src="{{ url_for('static', filename='img/jellyfin-sign-in-options.jpg') }}" alt="Jellyfin sign-in options screen">
-              <figcaption>Choose the sign-in option</figcaption>
-            </figure>
-          </div>
-        </details>
-        <h3 id="jellyfin-tv">TV sign-in with QuickConnect</h3>
-        <p>Phones, tablets, and computers can open the normal browser login directly. TVs and streaming devices are harder with a remote, so use <strong>QuickConnect</strong>.</p>
-        <div class="steps">
-          <div class="step"><div class="num">1</div><div>Download the Jellyfin app on your TV or streaming device.</div></div>
-          <div class="step"><div class="num">2</div><div>Sign in to Jellyfin on your phone, tablet, or computer first.</div></div>
-          <div class="step"><div class="num">3</div><div>If the TV asks for a server address, enter <strong>{{ jellyfin_url }}</strong>.</div></div>
-          <div class="step"><div class="num">4</div><div>Choose <strong>QuickConnect</strong> or <strong>Quick Connect</strong>.</div></div>
-          <div class="step"><div class="num">5</div><div>Enter the TV code from your already-signed-in phone or computer, then approve the connection.</div></div>
-        </div>
-        <details class="walkthrough">
-          <summary>Expand walkthrough images</summary>
-          <div class="shot-grid">
-            <figure class="guide-shot">
-              <img src="{{ url_for('static', filename='img/jellyfin-server-address.jpg') }}" alt="Jellyfin server address screen">
-              <figcaption>Enter the server address on TV too</figcaption>
-            </figure>
-            <figure class="guide-shot">
-              <img src="{{ url_for('static', filename='img/jellyfin-login.jpg') }}" alt="Jellyfin login screen with Quick Connect option">
-              <figcaption>TV sign-in screen</figcaption>
-            </figure>
-            <figure class="guide-shot">
-              <img src="{{ url_for('static', filename='img/jellyfin-quick-connect.jpg') }}" alt="Jellyfin Quick Connect screen">
-              <figcaption>Jellyfin Quick Connect</figcaption>
-            </figure>
-            <figure class="guide-shot">
-              <img src="{{ url_for('static', filename='img/immich-quick-connect.jpg') }}" alt="Quick Connect approval example">
-              <figcaption>Quick Connect approval example</figcaption>
-            </figure>
-          </div>
-        </details>
-        <h3>Troubleshooting</h3>
-        <ul><li>If the app asks for a server address, use <strong>{{ jellyfin_url }}</strong>.</li><li>Create and test your account on a phone, tablet, or computer before trying a TV.</li><li>If playback is slow, lower playback quality in the player settings.</li></ul>
-      </section>
-      <section id="requests" class="card section">
-        <div class="eyebrow">Requests</div><h2>Request movies and shows</h2>
-        <p>Requests is where you ask for media that is not already available in Jellyfin.</p>
-        <div class="steps">
-          <div class="step"><div class="num">1</div><div><strong>Open Requests.</strong><br><a href="{{ requests_url }}">{{ requests_url }}</a></div></div>
-          <div class="step"><div class="num">2</div><div><strong>Choose Sign in with Keycloak.</strong><br>Use the same Google or email account as Jellyfin. Your Requests account is created on first sign-in.</div></div>
-          <div class="step"><div class="num">3</div><div><strong>Search for a movie or show.</strong><br>Open the result and select <strong>Request</strong>.</div></div>
-        </div>
-        <h3>What happens next</h3>
-        <ul><li><strong>Pending</strong> means waiting for approval or processing.</li><li><strong>Approved</strong> means accepted and waiting to become available.</li><li><strong>Available</strong> means ready to watch in Jellyfin.</li></ul>
-        <p>Popular releases may appear in about 30 minutes. Niche items can take a day or two.</p>
-      </section>
-      <section id="home-screen" class="card section">
-        <div class="eyebrow">Mobile shortcut</div><h2>Add Requests or Jellyfin to your home screen</h2>
-        <p>For quick access, add each website to your phone's home screen like an app.</p>
-        <div class="grid"><div><h3>iPhone / iPad</h3><ol><li>Open the site in Safari.</li><li>Tap the Share button.</li><li>Choose <strong>Add to Home Screen</strong>.</li><li>Tap <strong>Add</strong>.</li></ol></div><div><h3>Android</h3><ol><li>Open the site in Chrome.</li><li>Tap the three-dot menu.</li><li>Choose <strong>Add to Home screen</strong> or <strong>Install app</strong>.</li><li>Confirm.</li></ol></div></div>
-      </section>
-    </main>
-    <aside class="card toc"><div class="eyebrow">Quick links</div><a href="#jellyfin">Jellyfin setup</a><a href="#requests">Request media</a><a href="#home-screen">Add to home screen</a><a href="{{ jellyfin_url }}">Open Jellyfin</a><a href="{{ requests_url }}">Open Requests</a><p class="small">Need help? Send Pierce the device/browser, what step failed, and a screenshot of the error.</p></aside>
+  <div class="guide-dock">
+    <nav class="guide-sections" aria-label="Guide sections">
+      <a href="#sign-in">Signing in</a>
+      <a href="#seerr">Requests</a>
+      <a href="#jellyfin">Watching</a>
+    </nav>
   </div>
+  <main>
+    <section class="card guide-step" data-step="0" aria-labelledby="welcome-title">
+      <div class="service-brand"><img src="{{ url_for('static', filename='img/keycloak-logo.svg') }}" alt="Keycloak logo" width="48" height="48"><div><div class="service-name">Keycloak</div><span>Sign in to stuff</span></div></div>
+      <div class="eyebrow">Welcome</div><h2 id="welcome-title">First, sign in to confirm your account</h2>
+      <p>Tap <strong>Sign in with Keycloak</strong> below. Use your Google or email account. This is the account you'll use to sign into everything.</p>
+      <a class="sso-example" href="{{ url_for('main.oidc_start', code='practice') }}">Sign in with Keycloak</a>
+      {% if authenticated %}<p class="msg ok" role="status"><strong>You’re logged in!</strong> Sign-in confirmed: Keycloak returned a verified email for this browser.</p>
+      {% else %}<p class="small">This practice sign-in does not use or redeem an invite. New here? Use the invite link Pierce sent you to join, or choose email signup on that page.</p>{% endif %}
+      <div class="step-actions"><span></span><button class="btn secondary next-step" type="button">Continue</button></div>
+    </section>
+    <section class="card guide-step" data-step="1" aria-labelledby="verified-title" hidden>
+      <div class="service-brand"><img src="{{ url_for('static', filename='img/keycloak-logo.svg') }}" alt="Keycloak logo" width="48" height="48"><div><div class="service-name">Keycloak</div><span>Sign in to stuff</span></div></div>
+      <div class="eyebrow">Sign-in return</div><h2 id="verified-title">Check that you returned here</h2>
+      {% if authenticated %}<p class="msg ok" role="status"><strong>You’re logged in!</strong> Sign-in confirmed. Continue to Seerr setup.</p>{% else %}<p class="note warn">The walkthrough cannot confirm sign-in yet. Start the real Keycloak login; the confirmation appears when its verified callback returns to this browser.</p><a class="sso-example" href="{{ url_for('main.oidc_start', code='practice') }}">Sign in with Keycloak</a>{% endif %}
+      <p>After Keycloak, look for “You’re logged in!” and “Sign-in confirmed” here. If you cancelled or changed browsers, retry in this same browser.</p>
+      <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><button class="btn next-step" type="button">Continue</button></div>
+    </section>
+    <section class="card guide-step" data-step="2" aria-labelledby="requests-title" hidden>
+      <div class="service-brand"><img class="seerr-logo" src="{{ url_for('static', filename='img/seerr-logo.svg') }}" alt="Seerr logo" width="120" height="64"><div><div class="service-name">Seerr</div><span>Request stuff</span></div></div>
+      <div class="eyebrow">Seerr</div><h2 id="requests-title">Install Seerr on your phone</h2>
+      <p>Open <a href="{{ requests_url }}" target="_blank" rel="noopener">Seerr</a> and sign in with your Keycloak account.</p>
+      <div class="grid install-grid"><div><h3>iPhone or iPad</h3><ol><li>Open Seerr in <strong>Safari</strong>.</li><li>Tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.</li><li>Tap <strong>Add</strong>. If the option is missing, use Safari and scroll the Share list.</li></ol></div><div><h3>Android</h3><ol><li>Open Seerr in <strong>Chrome</strong>.</li><li>Tap the three-dot menu, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li><li>Confirm the prompt. The browser may use different wording.</li></ol></div></div>
+      <p class="small">Seerr is a separate site, so this guide cannot detect whether installation finished. Complete it there, or skip and return here.</p>
+      <a class="btn secondary" href="{{ requests_url }}" target="_blank" rel="noopener">Open Seerr to install</a>
+      <h3>Request something</h3><ol><li>Search for a movie or show.</li><li>Open a result and select <strong>Request</strong>.</li><li><strong>Pending</strong> means processing; <strong>Approved</strong> means accepted; <strong>Available</strong> means ready in Jellyfin. Popular releases may take about 30 minutes; niche items can take a day or two.</li></ol>
+      <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><button class="btn next-step" type="button">Done</button></div>
+    </section>
+    <section class="card guide-step" data-step="3" aria-labelledby="jellyfin-title" hidden>
+      <div class="service-brand"><img src="{{ url_for('static', filename='img/jellyfin-logo.png') }}" alt="Jellyfin logo" width="48" height="48"><div><div class="service-name">Jellyfin</div><span>Watch stuff</span></div></div>
+      <div class="eyebrow">Watch media</div><h2 id="jellyfin-title">Sign in to Jellyfin</h2>
+      <p>Open <a href="{{ jellyfin_url }}" target="_blank" rel="noopener">{{ jellyfin_url }}</a> on a phone or computer, or install the Jellyfin app and enter that server address. Choose <strong>Sign in with Keycloak</strong>—do not type into the ordinary Jellyfin password boxes.</p>
+      <figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-sign-in-options.jpg') }}" alt="Jellyfin sign-in options with Sign in with Keycloak circled"><figcaption>On Jellyfin, choose “Sign in with Keycloak” to use SSO.</figcaption></figure>
+      <p>On a TV, sign in on your phone first. Install the Jellyfin TV app; if asked, enter <strong>{{ jellyfin_url }}</strong>, choose <strong>QuickConnect</strong>, and enter the TV code on your signed-in phone or computer to approve it.</p>
+      <h3>Set up your TV with Quick Connect</h3>
+      <div class="shot-grid"><figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-server-address.jpg') }}" alt="Jellyfin server address screen"><figcaption>1. Enter the server address above.</figcaption></figure><figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-login.jpg') }}" alt="Jellyfin login screen with Quick Connect option"><figcaption>2. Choose Quick Connect on your TV.</figcaption></figure><figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-quick-connect.jpg') }}" alt="Jellyfin Quick Connect screen"><figcaption>3. Find the code displayed on your TV.</figcaption></figure><figure class="guide-shot"><img src="{{ url_for('static', filename='img/immich-quick-connect.jpg') }}" alt="Phone screen for approving a Quick Connect code"><figcaption>4. Enter the TV code on your signed-in device.</figcaption></figure></div>
+      <p>If playback is slow, lower playback quality in player settings. If you get stuck, tell Pierce your device/browser, step, and any error screenshot.</p>
+      <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><a class="btn secondary" href="{{ jellyfin_url }}" target="_blank" rel="noopener">Open Jellyfin</a><button class="btn next-step" type="button">Finish</button></div>
+    </section>
+    <section class="card guide-step" data-step="4" aria-labelledby="complete-title" hidden><div class="eyebrow">Guide complete</div><h2 id="complete-title">You're all set!</h2><p>You can return to this guide anytime. Use Jellyfin to watch available media and Seerr to request more; both use the same Keycloak sign-in.</p><div class="completion-links"><a href="{{ jellyfin_url }}" aria-label="Open Jellyfin"><img src="{{ url_for('static', filename='img/jellyfin-logo.png') }}" alt="Jellyfin logo"></a><a href="{{ requests_url }}" aria-label="Open Seerr"><img src="{{ url_for('static', filename='img/seerr-logo.svg') }}" alt="Seerr logo"></a></div><div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><button class="btn secondary" id="restartGuide" type="button">Review from beginning</button></div></section>
+  </main>
 </div>
+<script src="{{ url_for('static', filename='js/guide.js') }}" defer></script>
 {% endblock %}

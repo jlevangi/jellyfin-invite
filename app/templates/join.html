@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Join Jellyfin{% endblock %}
 {% block body %}
-<main class="card" style="width:min(100%,680px);margin:8vh auto">
-  <h1>Join Jellyfin</h1>
-  <p class="lede">Use your Google account to accept this invite and unlock Jellyfin plus Requests.</p>
-  {% if error %}<div class="msg err">{{ error }}</div>{% endif %}
+<main class="card join-card">
+  <h1>Get started with your invite</h1>
+  <p class="lede">Use your Google account to accept this invite and unlock Jellyfin plus Requests. This is the account you'll use to sign into everything.</p>
   <a class="google-btn" href="/oidc/start/{{ code }}"><span class="google-mark" aria-hidden="true">G</span><span>Continue with Google</span></a>
+  <a class="join-guide-link" href="/#sign-in">Already activated? Get Started with the setup guide</a>
   <details>
     <summary class="btn secondary email-toggle">Use email instead</summary>
     <form id="form">

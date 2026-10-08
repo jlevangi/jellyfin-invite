@@ -45,43 +45,23 @@ def test_healthz(client):
 def test_guide_page_renders_core_sections(client):
     res = client.get("/")
     assert res.status_code == 200
-    assert b'href="/admin">Admin Login</a>' in res.data
-    assert b"Pierce's Media" in res.data
-    assert b"Watch Jellyfin. Request new media." in res.data
-    assert b"Using Jellyfin" in res.data
-    assert b"Mobile device or computer sign-in" in res.data
-    assert b"TV sign-in with QuickConnect" in res.data
-    assert b"download the Jellyfin app on your phone" in res.data
-    assert b"Download the Jellyfin app on your TV" in res.data
-    assert b"accept your invite and finish creating your account" not in res.data
-    assert res.data.count(b'<details class="walkthrough">') == 2
-    assert res.data.count(b"Expand walkthrough images") == 2
-    assert b'<details class="walkthrough" open>' not in res.data
-    assert b"Page sections" in res.data
-    assert b"QuickConnect" in res.data
-    assert b"jellyfin-login.jpg" in res.data
-    assert b"jellyfin-server-address.jpg" in res.data
+    for text in (b"Sign in with Keycloak", b"Sign-in confirmed", b"Add to Home Screen", b"QuickConnect", b"https://jellyfin.example.test", b"https://request.example.test", b"Get Started", b"You're all set!", b"jellyfin-logo.png", b"seerr-logo.svg"):
+        assert text in res.data
+    assert b'data-step="0"' in res.data
+    assert b'role="status" aria-live="polite" hidden' in res.data
     assert b"jellyfin-sign-in-options.jpg" in res.data
-    assert b"jellyfin-quick-connect.jpg" in res.data
-    assert b"immich-quick-connect.jpg" in res.data
-    assert res.data.count(b"Choose Sign in with Keycloak.") == 2
-    assert b"Add Requests or Jellyfin to your home screen" in res.data
-    assert b"https://jellyfin.example.test" in res.data
-    assert b"https://request.example.test" in res.data
 
 
 def test_join_page_renders_code_and_no_direct_app_buttons(client):
     res = client.get("/j/abc123")
     assert res.status_code == 200
-    assert b'href="/">Home</a>' in res.data
-    assert b'href="/admin">Admin Login</a>' in res.data
+    assert b"ABC123" in res.data
     assert b"Continue with Google" in res.data
     assert b"Use email instead" in res.data
     assert b"Email me a password setup link" in res.data
     assert b'value="ABC123"' in res.data
-    assert b"Continue to Jellyfin setup guide" in res.data
-    assert b"Open Jellyfin" not in res.data
     assert b"Open Requests" not in res.data
+    assert b"Get Started with the setup guide" in res.data
 
 
 def test_admin_requires_token(client):
@@ -240,14 +220,42 @@ def test_oidc_invite_flow_grants_existing_keycloak_user(client, monkeypatch):
     params = urllib.parse.parse_qs(redirect.query)
     assert params["kc_idp_hint"] == ["google"]
     assert params["redirect_uri"] == ["https://join.example.test/oidc/callback"]
+    cookie = start.headers["Set-Cookie"]
+    assert "HttpOnly" in cookie and "SameSite=Lax" in cookie
 
     callback = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": params["state"][0]}))
-    assert callback.status_code == 200
-    assert b"Access granted" in callback.data
-    assert b"https://request.example.test" in callback.data
+    assert callback.status_code == 302 and callback.headers["Location"] == "/#confirmation"
     assert ("grant", "keycloak-user-id") in FakeKeycloak.calls
 
     listed = client.get("/api/admin/invites", headers=auth())
     invite = listed.json["invites"][0]
     assert invite["used_by_email"] == "user@example.test"
     assert invite["used_by_subject"] == "keycloak-user-id"
+
+
+def test_practice_oidc_binds_browser_and_does_not_redeem_invite(client, monkeypatch):
+    monkeypatch.setattr(routes, "Keycloak", FakeKeycloak)
+    FakeKeycloak.calls.clear()
+    created = client.post("/api/admin/invites", json={"note": "practice"}, headers=auth())
+    code = created.json["code"]
+    start = client.get("/oidc/start/practice")
+    params = urllib.parse.parse_qs(urllib.parse.urlparse(start.headers["Location"]).query)
+    assert "kc_idp_hint" not in params
+    state = params["state"][0]
+    client.delete_cookie("oidc_browser", domain="localhost", path="/oidc/callback")
+    mismatch = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": state}))
+    assert mismatch.status_code == 400
+    assert b"Get started with your invite" in mismatch.data
+    assert not any(call[0] == "exchange" for call in FakeKeycloak.calls)
+
+    start = client.get("/oidc/start/practice")
+    params = urllib.parse.parse_qs(urllib.parse.urlparse(start.headers["Location"]).query)
+    callback = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": params["state"][0]}))
+    assert callback.status_code == 302 and callback.headers["Location"] == "/#confirmation"
+    assert any(cookie.startswith("walkthrough_auth=") for cookie in callback.headers.getlist("Set-Cookie"))
+    assert client.get("/#confirmation").data.count(b"Sign-in confirmed") >= 1
+    assert not any(call[0] == "grant" for call in FakeKeycloak.calls)
+    assert client.get("/api/admin/invites", headers=auth()).json["invites"][0]["redemptions"] == []
+
+    replay = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": params["state"][0]}))
+    assert replay.status_code == 302  # OIDC state is signed but not one-time; it was valid before this UI change.

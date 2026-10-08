@@ -3,7 +3,7 @@ import re
 import secrets
 import urllib.parse
 
-from flask import Blueprint, current_app, jsonify, redirect, render_template, request
+from flask import Blueprint, current_app, jsonify, make_response, redirect, render_template, request
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 from .db import connect, now, rows
@@ -30,6 +30,9 @@ def keycloak():
 def state_serializer():
     return URLSafeTimedSerializer(current_app.config["ADMIN_TOKEN"], salt="jellyfin-invite-oidc")
 
+
+def auth_serializer():
+    return URLSafeTimedSerializer(current_app.config["ADMIN_TOKEN"], salt="jellyfin-walkthrough-auth")
 
 def need_admin():
     token = request.headers.get("X-Admin-Token") or request.headers.get("Authorization", "").removeprefix("Bearer ")
@@ -115,10 +118,19 @@ def healthz():
 
 @bp.get("/")
 def onboarding():
+    authenticated = False
+    signed = request.cookies.get("walkthrough_auth")
+    if signed:
+        try:
+            auth_serializer().loads(signed, max_age=3600)
+            authenticated = True
+        except (BadSignature, SignatureExpired):
+            pass
     return render_template(
         "guide.html",
         jellyfin_url=current_app.config["JELLYFIN_URL"],
         requests_url=current_app.config["REQUESTS_URL"],
+        authenticated=authenticated,
     )
 
 
@@ -130,59 +142,118 @@ def join(code):
 @bp.get("/oidc/start/<code>")
 def oidc_start(code):
     code = code.strip().upper()
-    with get_db() as con:
-        invite = con.execute("select * from invite_codes where code=?", (code,)).fetchone()
-        invalid = invite_is_invalid(con, invite)
-    if invalid:
-        return render_template("join.html", code=code, error="Invite code is invalid, expired, used, or revoked."), 403
+    practice = code.lower() == "practice"
+    if not practice:
+        with get_db() as con:
+            invite = con.execute("select * from invite_codes where code=?", (code,)).fetchone()
+            invalid = invite_is_invalid(con, invite)
+        if invalid:
+            return render_template("join.html", code=code, error="Invite code is invalid, expired, used, or revoked."), 403
 
-    state = state_serializer().dumps({"code": code, "nonce": secrets.token_urlsafe(16)})
+    nonce = secrets.token_urlsafe(16)
+    state = state_serializer().dumps({"code": None if practice else code, "nonce": nonce, "practice": practice})
     params = {
         "client_id": current_app.config["KEYCLOAK_CLIENT_ID"],
         "redirect_uri": current_app.config["OIDC_REDIRECT_URI"],
         "response_type": "code",
         "scope": "openid email profile",
         "state": state,
+        "nonce": nonce,
     }
-    if current_app.config["OIDC_IDP_HINT"]:
+    # Practice login must show the normal Keycloak page rather than bypassing it.
+    if not practice and current_app.config["OIDC_IDP_HINT"]:
         params["kc_idp_hint"] = current_app.config["OIDC_IDP_HINT"]
     auth_url = (
         f"{current_app.config['KEYCLOAK_BASE'].rstrip('/')}/realms/{current_app.config['KEYCLOAK_REALM']}"
         f"/protocol/openid-connect/auth?{urllib.parse.urlencode(params)}"
     )
-    return redirect(auth_url)
+    response = redirect(auth_url)
+    response.set_cookie("oidc_browser", nonce, max_age=900, httponly=True, secure=request.is_secure,
+                        samesite="Lax", path="/oidc/callback")
+    return response
 
 
 @bp.get("/oidc/callback")
 def oidc_callback():
     if request.args.get("error"):
-        return render_template("join.html", code="", error="Keycloak login was cancelled or failed."), 400
+        response = make_response(render_template("join.html", code="", error="Keycloak sign-in was cancelled or failed. Return to the guide or reopen your invite and try again."), 400)
+        response.delete_cookie("oidc_browser", path="/oidc/callback")
+        return response
+    if not request.args.get("code"):
+        response = make_response(render_template("join.html", code="", error="Keycloak did not return a sign-in code. Return to the guide or reopen your invite and try again."), 400)
+        response.delete_cookie("oidc_browser", path="/oidc/callback")
+        return response
     try:
         state = state_serializer().loads(request.args.get("state", ""), max_age=900)
     except SignatureExpired:
-        return render_template("join.html", code="", error="Invite login expired. Open your invite link and try again."), 400
+        response = make_response(render_template("join.html", code="", error="Sign-in expired. Return to the guide or reopen your invite and try again."), 400)
+        response.delete_cookie("oidc_browser", path="/oidc/callback")
+        return response
     except BadSignature:
-        return render_template("join.html", code="", error="Invite login state was invalid. Open your invite link and try again."), 400
+        response = make_response(render_template("join.html", code="", error="Sign-in state was invalid. Return to the guide or reopen your invite and try again."), 400)
+        response.delete_cookie("oidc_browser", path="/oidc/callback")
+        return response
 
-    code = state["code"]
-    kc = keycloak()
-    token = kc.exchange_code(request.args.get("code", ""), current_app.config["OIDC_REDIRECT_URI"])
-    user = kc.userinfo(token["access_token"])
+    nonce = state.get("nonce")
+    if not nonce or not secrets.compare_digest(request.cookies.get("oidc_browser", ""), nonce):
+        response, status = render_template("join.html", code="", error="This sign-in started in another browser session. Return to the guide or reopen your invite and try again."), 400
+        response = make_response(response, status)
+        response.delete_cookie("oidc_browser", path="/oidc/callback")
+        return response
+    response = redirect("/#confirmation")
+    if state.get("practice"):
+        try:
+            kc = keycloak()
+            token = kc.exchange_code(request.args.get("code", ""), current_app.config["OIDC_REDIRECT_URI"])
+            user = kc.userinfo(token["access_token"])
+        except Exception:
+            response = make_response(render_template("join.html", code="", error="Keycloak sign-in failed. Return to the guide and try again."), 502)
+            response.delete_cookie("oidc_browser", path="/oidc/callback")
+            return response
+        if not user.get("sub") or not user.get("email") or user.get("email_verified") is not True:
+            response = make_response(render_template("join.html", code="", error="Keycloak did not return a verified email for this account."), 403)
+            response.delete_cookie("oidc_browser", path="/oidc/callback")
+            return response
+        response.set_cookie("walkthrough_auth", auth_serializer().dumps({"sub": user["sub"]}), max_age=3600,
+                            httponly=True, secure=request.is_secure, samesite="Lax", path="/")
+        return response
+
+    code = state.get("code")
+    if not code:
+        response = make_response(render_template("join.html", code="", error="Sign-in state was invalid. Reopen your invite and try again."), 400)
+        response.delete_cookie("oidc_browser", path="/oidc/callback")
+        return response
+    try:
+        kc = keycloak()
+        token = kc.exchange_code(request.args.get("code", ""), current_app.config["OIDC_REDIRECT_URI"])
+        user = kc.userinfo(token["access_token"])
+    except Exception:
+        response = make_response(render_template("join.html", code=code, error="Keycloak sign-in failed. Return to the guide or reopen your invite and try again."), 502)
+        response.delete_cookie("oidc_browser", path="/oidc/callback")
+        return response
     email = (user.get("email") or "").lower()
     subject = user.get("sub")
-    if not subject or not email or user.get("email_verified") is False:
-        return render_template("join.html", code=code, error="Keycloak did not return a verified email for this account."), 403
+    if not subject or not email or user.get("email_verified") is not True:
+        response = make_response(render_template("join.html", code=code, error="Keycloak did not return a verified email for this account."), 403)
+        response.delete_cookie("oidc_browser", path="/oidc/callback")
+        return response
 
     reservation = reserve_redemption(code)
     if not reservation:
-        return render_template("join.html", code=code, error="Invite code is invalid, expired, used, or revoked."), 403
+        response = make_response(render_template("join.html", code=code, error="Invite code is invalid, expired, used, or revoked."), 403)
+        response.delete_cookie("oidc_browser", path="/oidc/callback")
+        return response
     try:
         kc.grant_existing_user(subject)
     except Exception:
         release_reservation(reservation)
         raise
     record_redemption(reservation, code, email, subject)
-    return render_template("success.html", message=success_message())
+    response.set_cookie("walkthrough_auth", auth_serializer().dumps({"sub": subject}), max_age=3600,
+                        httponly=True, secure=request.is_secure, samesite="Lax", path="/")
+    return response
+
+
 
 
 @bp.get("/admin")

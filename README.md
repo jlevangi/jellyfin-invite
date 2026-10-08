@@ -13,11 +13,17 @@ https://join.levangie.dev.
      `KEYCLOAK_GROUP_ID`.
    - **Use email instead**: creates or finds the Keycloak user, adds it to
      the group, and sends a verify-email/set-password link.
-3. Group `jellyfin-users` grants the realm role checked by Jellyfin's SSO
-   plugin. Users sign in to Jellyfin (`JELLYFIN_URL`) with **Sign in with
-   Keycloak**; TVs use Quick Connect.
-4. Requests (`REQUESTS_URL`, Jellyseerr) uses **Sign in with Keycloak**; the
-   Requests account is created on first sign-in.
+3. Successful invite sign-in returns to the walkthrough at `/` with verified
+   sign-in confirmation. Existing users can practice **Sign in with SSO** there;
+   this opens Keycloak without a Google hint and does not redeem an invite or
+   grant access. Confirmation lasts one hour in a signed HttpOnly cookie.
+4. The guide walks through installing Seerr (`REQUESTS_URL`) in Safari or
+   Chrome, then Jellyfin login using the supplied screenshots and TV Quick
+   Connect. Installation must happen on Seerr itself; this separate guide
+   cannot trigger or detect Seerr installation.
+5. Group `jellyfin-users` grants the realm role checked by Jellyfin's SSO
+   plugin. Use **Sign in with Keycloak** in Jellyfin and Seerr. Explicit guide
+   section links are bookmarkable; Home always opens Welcome.
 
 ## Configuration
 
