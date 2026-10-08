@@ -64,6 +64,16 @@ def test_join_page_renders_code_and_no_direct_app_buttons(client):
     assert b"Get Started with the setup guide" in res.data
 
 
+def test_oidc_callback_error_shows_sign_in_without_enrollment_controls(client):
+    res = client.get("/oidc/callback?error=access_denied")
+    assert res.status_code == 400
+    assert b"Keycloak sign-in was cancelled or failed." in res.data
+    assert b"role=\"alert\"" in res.data
+    assert b"Sign in to Jellyfin" in res.data
+    assert b"Continue with Google" not in res.data
+    assert b"Email me a password setup link" not in res.data
+    assert b'id="form"' not in res.data
+
 def test_admin_requires_token(client):
     page = client.get("/admin")
     assert b"Admin password" in page.data
@@ -245,7 +255,7 @@ def test_oidc_sign_in_binds_browser_confirms_and_does_not_redeem_invite(client, 
     client.delete_cookie("oidc_browser", domain="localhost", path="/oidc/callback")
     mismatch = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": params["state"][0]}))
     assert mismatch.status_code == 400
-    assert b"Get started with your invite" in mismatch.data
+    assert b"Sign in to Jellyfin" in mismatch.data
     assert not any(call[0] == "exchange" for call in FakeKeycloak.calls)
 
     start = client.get("/oidc/sign-in")
