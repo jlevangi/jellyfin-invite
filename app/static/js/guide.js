@@ -60,6 +60,19 @@
     }
   }
   const copyAddress = root.querySelector('#copyJellyfinAddress');
+  const copySeerr = root.querySelector('#copySeerrAddress');
+  copySeerr?.addEventListener('click', async () => {
+    const value = root.querySelector('#seerrAddress').textContent.trim();
+    const status = root.querySelector('#copySeerrStatus');
+    status.textContent = '';
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(value);
+      status.textContent = 'Copied.';
+    } catch {
+      status.textContent = 'Could not copy automatically. Select and copy the address above.';
+    }
+  });
   copyAddress?.addEventListener('click', async () => {
     const value = root.querySelector('#jellyfinAddress').textContent.trim();
     const status = root.querySelector('#copyAddressStatus');

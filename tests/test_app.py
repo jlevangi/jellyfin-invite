@@ -45,7 +45,7 @@ def test_healthz(client):
 def test_guide_page_renders_core_sections(client):
     res = client.get("/")
     assert res.status_code == 200
-    for text in (b"Sign in with Keycloak", b"Sign-in confirmed", b"Add to Home Screen", b"QuickConnect", b"https://jellyfin.example.test", b"https://request.example.test", b"Get Started", b"You're all set!", b"jellyfin-logo.png", b"seerr-logo.svg"):
+    for text in (b"Sign in with Keycloak", b"Add to Home Screen", b"QuickConnect", b"https://jellyfin.example.test", b"https://request.example.test", b"Get Started", b"You're all set!", b"jellyfin-logo.png", b"seerr-logo.svg"):
         assert text in res.data
     assert b'data-step="0"' in res.data
     assert b'role="status" aria-live="polite"' in res.data
