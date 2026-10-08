@@ -2,7 +2,7 @@
 {% block title %}Jellyfin and Requests Guide{% endblock %}
 {% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/guide.css') }}">{% endblock %}
 {% block body %}
-<div class="wrap guide-walkthrough" data-authenticated="{{ 'true' if authenticated else 'false' }}" data-resume-step="{{ 0 if authenticated else '' }}">
+<div class="wrap guide-walkthrough" data-authenticated="{{ 'true' if authenticated else 'false' }}">
   <div class="guide-intro" aria-labelledby="intro-title">
     <section class="hero card welcome-start">
     <div class="eyebrow">Pierce's media setup</div>
@@ -44,20 +44,22 @@
       <div class="service-brand"><img class="seerr-logo" src="{{ url_for('static', filename='img/seerr-logo.svg') }}" alt="Seerr logo" width="48" height="48"><div><div class="service-name">Seerr</div><span>Request stuff</span></div></div>
       <div class="eyebrow">Seerr</div><h2 id="requests-title">Install Seerr on your phone</h2>
       <p>Open Seerr and sign in with your Keycloak account.</p>
-      <div class="server-address"><p>Tap the address to copy it:</p><button class="server-address-copy" id="copySeerrAddress" type="button" aria-label="Copy Seerr address"><code id="seerrAddress">{{ requests_url }}</code></button><span id="copySeerrStatus" role="status" aria-live="polite"></span></div>
-      <div class="grid install-grid"><div><h3>iPhone or iPad</h3><ol><li>Open Seerr in <strong>Safari</strong>.</li><li>Tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.</li><li>Tap <strong>Add</strong>. If the option is missing, use Safari and scroll the Share list.</li></ol></div><div><h3>Android</h3><ol><li>Open Seerr in <strong>Chrome</strong>.</li><li>Tap the three-dot menu, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li><li>Confirm the prompt. The browser may use different wording.</li></ol></div></div>
-      <p class="small">Seerr is a separate site, so this guide cannot detect whether installation finished. Complete it there, or skip and return here.</p>
       <div class="welcome-services"><a href="{{ requests_url }}" target="_blank" rel="noopener"><img src="{{ url_for('static', filename='img/seerr-logo.svg') }}" alt=""><span><strong>Open Seerr</strong><small>{{ requests_url }}</small></span></a></div>
-      <h3>Request something</h3><ol><li>Search for a movie or show.</li><li>Open a result and select <strong>Request</strong>.</li><li><strong>Pending</strong> means processing; <strong>Approved</strong> means accepted; <strong>Available</strong> means ready in Jellyfin. Popular releases may take about 30 minutes; niche items can take a day or two.</li></ol>
+      <div class="grid install-grid"><div><h3>iPhone or iPad</h3><ol><li>Open Seerr in <strong>Safari</strong>.</li><li>Tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.</li><li>Tap <strong>Add</strong>. If the option is missing, use Safari and scroll the Share list.</li></ol></div><div><h3>Android</h3><ol><li>Open Seerr in <strong>Chrome</strong>.</li><li>Tap the three-dot menu, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li><li>Confirm the prompt. The browser may use different wording.</li></ol></div></div>
+      <h2>Request something</h2><ol><li>Search for a movie or show.</li><li>Open a result and select <strong>Request</strong>.</li><li><strong>Pending</strong> means processing; <strong>Approved</strong> means accepted; <strong>Available</strong> means ready in Jellyfin. Popular releases may take about 30 minutes; niche items can take a day or two.</li></ol>
       <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><button class="btn next-step" type="button">Done</button></div>
     </section>
     <section class="card guide-step" data-step="2" aria-labelledby="jellyfin-title" hidden>
       <div class="service-brand"><img src="{{ url_for('static', filename='img/jellyfin-logo.png') }}" alt="Jellyfin logo" width="48" height="48"><div><div class="service-name">Jellyfin</div><span>Watch stuff</span></div></div>
       <div class="eyebrow">Watch media</div><h2 id="jellyfin-title">Sign in to Jellyfin</h2>
-      <ol><li>Open <a href="{{ jellyfin_url }}" target="_blank" rel="noopener">{{ jellyfin_url }}</a> on a phone or computer, or install the Jellyfin app.</li><li>Enter the server address below.</li><li>Choose <strong>Sign in with Keycloak</strong>—do not type into the ordinary Jellyfin password boxes.</li></ol>
-      <div class="server-address"><p>Tap the address to copy it into the Jellyfin app:</p><button class="server-address-copy" id="copyJellyfinAddress" type="button" aria-label="Copy Jellyfin server address"><code id="jellyfinAddress">{{ jellyfin_url }}</code></button><span id="copyAddressStatus" role="status" aria-live="polite"></span></div>
+      <h2>Using the Website</h2>
+      <ol><li>Open <a href="{{ jellyfin_url }}" target="_blank" rel="noopener">{{ jellyfin_url }}</a> on a phone or computer.</li><li>Choose <strong>Sign in with Keycloak</strong>—do not type into the ordinary Jellyfin password boxes.</li></ol>
       <figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-sign-in-options.jpg') }}" alt="Jellyfin sign-in options with Sign in with Keycloak circled"><figcaption>On Jellyfin, choose “Sign in with Keycloak” to use SSO.</figcaption></figure>
-      <h3>Set up your TV with Quick Connect</h3>
+      <h2>Using the Mobile App</h2>
+      <ol><li>Install the Jellyfin app and open it.</li><li>Enter the server address below.</li><li>Choose <strong>Sign in with Keycloak</strong>.</li></ol>
+      <div class="server-address"><p>Tap the address to copy it into the Jellyfin app:</p><button class="server-address-copy" id="copyJellyfinAddress" type="button" aria-label="Copy Jellyfin server address"><code id="jellyfinAddress">{{ jellyfin_url }}</code></button><span id="copyAddressStatus" role="status" aria-live="polite"></span></div>
+      <h2>Set up your TV with Quick Connect</h2>
+      <p><strong>Note:</strong> Before starting on your TV, make sure you have opened the Jellyfin app or website on your phone and logged in there first. Then you can open the Quick Connect menu.</p>
       <ol>
         <li>Enter the server address above.</li>
         <li>Choose <strong>Quick Connect</strong> on your TV.</li>
