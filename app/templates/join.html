@@ -2,6 +2,8 @@
 {% block title %}Join Jellyfin{% endblock %}
 {% block body %}
 <main class="card join-card">
+  {% if error %}<p class="msg error" role="alert">{{ error }}</p>{% endif %}
+  {% if code %}
   <h1>Get started with your invite</h1>
   <p class="lede">Use your Google account to accept this invite and unlock Jellyfin plus Requests. This is the account you'll use to sign into everything.</p>
   <a class="google-btn" href="/oidc/start/{{ code }}"><span class="google-mark" aria-hidden="true">G</span><span>Continue with Google</span></a>
@@ -18,10 +20,15 @@
     </form>
   </details>
   <p class="muted">Invite code: <strong>{{ code }}</strong></p>
+  {% else %}
+  <h1>Sign in to Jellyfin</h1>
+  <p class="lede">Use the sign-in link in the setup guide to access your account.</p>
+  <a class="join-guide-link" href="/#sign-in">Return to the setup guide</a>
+  {% endif %}
   <div id="message" class="msg" hidden></div>
   <div id="next" class="note warn" hidden><strong>Next step:</strong> check your email from Keycloak, verify your email, and set your password. After that, continue to the setup guide.</div>
   <div id="guideSeparator" class="separator" hidden><span>Next step</span></div>
-  <a id="guide" class="guide-link" href="/" hidden>Continue to Jellyfin setup guide</a>
+  <a id="guide" class="guide-link" href="/#sign-in" hidden>Continue to Jellyfin setup guide</a>
 </main>
 <script src="{{ url_for('static', filename='js/join.js') }}" defer></script>
 {% endblock %}

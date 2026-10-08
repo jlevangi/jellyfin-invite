@@ -14,9 +14,9 @@ https://join.levangie.dev.
    - **Use email instead**: creates or finds the Keycloak user, adds it to
      the group, and sends a verify-email/set-password link.
 3. Successful invite sign-in returns to the walkthrough at `/` with verified
-   sign-in confirmation. Existing users can practice **Sign in with SSO** there;
-   this opens Keycloak without a Google hint and does not redeem an invite or
-   grant access. Confirmation lasts one hour in a signed HttpOnly cookie.
+   sign-in confirmation. Existing users can use **Sign in with SSO** there; this
+   opens Keycloak without a Google hint and does not redeem an invite or grant
+   access. Confirmation lasts one hour in a signed HttpOnly cookie.
 4. The guide walks through installing Seerr (`REQUESTS_URL`) in Safari or
    Chrome, then Jellyfin login using the supplied screenshots and TV Quick
    Connect. Installation must happen on Seerr itself; this separate guide

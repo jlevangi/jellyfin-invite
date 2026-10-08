@@ -48,7 +48,7 @@ def test_guide_page_renders_core_sections(client):
     for text in (b"Sign in with Keycloak", b"Sign-in confirmed", b"Add to Home Screen", b"QuickConnect", b"https://jellyfin.example.test", b"https://request.example.test", b"Get Started", b"You're all set!", b"jellyfin-logo.png", b"seerr-logo.svg"):
         assert text in res.data
     assert b'data-step="0"' in res.data
-    assert b'role="status" aria-live="polite" hidden' in res.data
+    assert b'role="status" aria-live="polite"' in res.data
     assert b"jellyfin-sign-in-options.jpg" in res.data
 
 
@@ -233,29 +233,37 @@ def test_oidc_invite_flow_grants_existing_keycloak_user(client, monkeypatch):
     assert invite["used_by_subject"] == "keycloak-user-id"
 
 
-def test_practice_oidc_binds_browser_and_does_not_redeem_invite(client, monkeypatch):
+def test_oidc_sign_in_binds_browser_confirms_and_does_not_redeem_invite(client, monkeypatch):
     monkeypatch.setattr(routes, "Keycloak", FakeKeycloak)
     FakeKeycloak.calls.clear()
-    created = client.post("/api/admin/invites", json={"note": "practice"}, headers=auth())
-    code = created.json["code"]
-    start = client.get("/oidc/start/practice")
+    client.post("/api/admin/invites", json={"note": "sign in isolation"}, headers=auth())
+    start = client.get("/oidc/sign-in")
     params = urllib.parse.parse_qs(urllib.parse.urlparse(start.headers["Location"]).query)
     assert "kc_idp_hint" not in params
-    state = params["state"][0]
+    state = routes.state_serializer().loads(params["state"][0])
+    assert state["code"] is None
     client.delete_cookie("oidc_browser", domain="localhost", path="/oidc/callback")
-    mismatch = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": state}))
+    mismatch = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": params["state"][0]}))
     assert mismatch.status_code == 400
     assert b"Get started with your invite" in mismatch.data
     assert not any(call[0] == "exchange" for call in FakeKeycloak.calls)
 
-    start = client.get("/oidc/start/practice")
+    start = client.get("/oidc/sign-in")
     params = urllib.parse.parse_qs(urllib.parse.urlparse(start.headers["Location"]).query)
     callback = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": params["state"][0]}))
+    cookies = callback.headers.getlist("Set-Cookie")
     assert callback.status_code == 302 and callback.headers["Location"] == "/#confirmation"
-    assert any(cookie.startswith("walkthrough_auth=") for cookie in callback.headers.getlist("Set-Cookie"))
+    assert any(cookie.startswith("oidc_browser=;") for cookie in cookies)
+    assert any(cookie.startswith("walkthrough_auth=") for cookie in cookies)
     assert client.get("/#confirmation").data.count(b"Sign-in confirmed") >= 1
     assert not any(call[0] == "grant" for call in FakeKeycloak.calls)
     assert client.get("/api/admin/invites", headers=auth()).json["invites"][0]["redemptions"] == []
-
     replay = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": params["state"][0]}))
-    assert replay.status_code == 302  # OIDC state is signed but not one-time; it was valid before this UI change.
+    assert replay.status_code == 400
+
+
+def test_email_activation_continues_to_sign_in_section(client, monkeypatch):
+    monkeypatch.setattr(routes, "Keycloak", FakeKeycloak)
+    created = client.post("/api/admin/invites", json={"note": "email flow"}, headers=auth())
+    page = client.get("/j/" + created.json["code"])
+    assert b'href="/#sign-in" hidden' in page.data

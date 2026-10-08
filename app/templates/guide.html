@@ -32,15 +32,15 @@
       <div class="service-brand"><img src="{{ url_for('static', filename='img/keycloak-logo.svg') }}" alt="Keycloak logo" width="48" height="48"><div><div class="service-name">Keycloak</div><span>Sign in to stuff</span></div></div>
       <div class="eyebrow">Welcome</div><h2 id="welcome-title">First, sign in to confirm your account</h2>
       <p>Tap <strong>Sign in with Keycloak</strong> below. Use your Google or email account. This is the account you'll use to sign into everything.</p>
-      <a class="sso-example" href="{{ url_for('main.oidc_start', code='practice') }}">Sign in with Keycloak</a>
+      <a class="sso-example" href="{{ url_for('main.oidc_sign_in') }}">Sign in with Keycloak</a>
       {% if authenticated %}<p class="msg ok" role="status"><strong>You’re logged in!</strong> Sign-in confirmed: Keycloak returned a verified email for this browser.</p>
-      {% else %}<p class="small">This practice sign-in does not use or redeem an invite. New here? Use the invite link Pierce sent you to join, or choose email signup on that page.</p>{% endif %}
+      {% else %}<p class="small">New here? Use the invite link Pierce sent you to join, or choose email signup on that page.</p>{% endif %}
       <div class="step-actions"><span></span><button class="btn secondary next-step" type="button">Continue</button></div>
     </section>
     <section class="card guide-step" data-step="1" aria-labelledby="verified-title" hidden>
       <div class="service-brand"><img src="{{ url_for('static', filename='img/keycloak-logo.svg') }}" alt="Keycloak logo" width="48" height="48"><div><div class="service-name">Keycloak</div><span>Sign in to stuff</span></div></div>
       <div class="eyebrow">Sign-in return</div><h2 id="verified-title">Check that you returned here</h2>
-      {% if authenticated %}<p class="msg ok" role="status"><strong>You’re logged in!</strong> Sign-in confirmed. Continue to Seerr setup.</p>{% else %}<p class="note warn">The walkthrough cannot confirm sign-in yet. Start the real Keycloak login; the confirmation appears when its verified callback returns to this browser.</p><a class="sso-example" href="{{ url_for('main.oidc_start', code='practice') }}">Sign in with Keycloak</a>{% endif %}
+      {% if authenticated %}<p class="msg ok" role="status"><strong>You’re logged in!</strong> Sign-in confirmed. Continue to Seerr setup.</p>{% else %}<p class="note warn">The walkthrough cannot confirm sign-in yet. Start the Keycloak sign-in; the confirmation appears when its verified callback returns to this browser.</p><a class="sso-example" href="{{ url_for('main.oidc_sign_in') }}">Sign in with Keycloak</a>{% endif %}
       <p>After Keycloak, look for “You’re logged in!” and “Sign-in confirmed” here. If you cancelled or changed browsers, retry in this same browser.</p>
       <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><button class="btn next-step" type="button">Continue</button></div>
     </section>

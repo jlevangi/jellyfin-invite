@@ -139,11 +139,15 @@ def join(code):
     return render_template("join.html", code=code.upper())
 
 
+@bp.get("/oidc/sign-in")
+def oidc_sign_in():
+    return oidc_start(None)
+
 @bp.get("/oidc/start/<code>")
 def oidc_start(code):
-    code = code.strip().upper()
-    practice = code.lower() == "practice"
-    if not practice:
+    is_sign_in = code is None
+    code = "" if is_sign_in else code.strip().upper()
+    if not is_sign_in:
         with get_db() as con:
             invite = con.execute("select * from invite_codes where code=?", (code,)).fetchone()
             invalid = invite_is_invalid(con, invite)
@@ -151,7 +155,7 @@ def oidc_start(code):
             return render_template("join.html", code=code, error="Invite code is invalid, expired, used, or revoked."), 403
 
     nonce = secrets.token_urlsafe(16)
-    state = state_serializer().dumps({"code": None if practice else code, "nonce": nonce, "practice": practice})
+    state = state_serializer().dumps({"code": code or None, "nonce": nonce})
     params = {
         "client_id": current_app.config["KEYCLOAK_CLIENT_ID"],
         "redirect_uri": current_app.config["OIDC_REDIRECT_URI"],
@@ -160,8 +164,7 @@ def oidc_start(code):
         "state": state,
         "nonce": nonce,
     }
-    # Practice login must show the normal Keycloak page rather than bypassing it.
-    if not practice and current_app.config["OIDC_IDP_HINT"]:
+    if not is_sign_in and current_app.config["OIDC_IDP_HINT"]:
         params["kc_idp_hint"] = current_app.config["OIDC_IDP_HINT"]
     auth_url = (
         f"{current_app.config['KEYCLOAK_BASE'].rstrip('/')}/realms/{current_app.config['KEYCLOAK_REALM']}"
@@ -200,42 +203,29 @@ def oidc_callback():
         response = make_response(response, status)
         response.delete_cookie("oidc_browser", path="/oidc/callback")
         return response
-    response = redirect("/#confirmation")
-    if state.get("practice"):
-        try:
-            kc = keycloak()
-            token = kc.exchange_code(request.args.get("code", ""), current_app.config["OIDC_REDIRECT_URI"])
-            user = kc.userinfo(token["access_token"])
-        except Exception:
-            response = make_response(render_template("join.html", code="", error="Keycloak sign-in failed. Return to the guide and try again."), 502)
-            response.delete_cookie("oidc_browser", path="/oidc/callback")
-            return response
-        if not user.get("sub") or not user.get("email") or user.get("email_verified") is not True:
-            response = make_response(render_template("join.html", code="", error="Keycloak did not return a verified email for this account."), 403)
-            response.delete_cookie("oidc_browser", path="/oidc/callback")
-            return response
-        response.set_cookie("walkthrough_auth", auth_serializer().dumps({"sub": user["sub"]}), max_age=3600,
-                            httponly=True, secure=request.is_secure, samesite="Lax", path="/")
-        return response
-
     code = state.get("code")
-    if not code:
-        response = make_response(render_template("join.html", code="", error="Sign-in state was invalid. Reopen your invite and try again."), 400)
-        response.delete_cookie("oidc_browser", path="/oidc/callback")
-        return response
+    is_sign_in = code is None
     try:
         kc = keycloak()
         token = kc.exchange_code(request.args.get("code", ""), current_app.config["OIDC_REDIRECT_URI"])
         user = kc.userinfo(token["access_token"])
     except Exception:
-        response = make_response(render_template("join.html", code=code, error="Keycloak sign-in failed. Return to the guide or reopen your invite and try again."), 502)
+        destination = "guide" if is_sign_in else "invite"
+        response = make_response(render_template("join.html", code=code or "", error=f"Keycloak sign-in failed. Return to the {destination} and try again."), 502)
         response.delete_cookie("oidc_browser", path="/oidc/callback")
         return response
     email = (user.get("email") or "").lower()
     subject = user.get("sub")
     if not subject or not email or user.get("email_verified") is not True:
-        response = make_response(render_template("join.html", code=code, error="Keycloak did not return a verified email for this account."), 403)
+        response = make_response(render_template("join.html", code=code or "", error="Keycloak did not return a verified email for this account."), 403)
         response.delete_cookie("oidc_browser", path="/oidc/callback")
+        return response
+
+    response = redirect("/#confirmation")
+    response.delete_cookie("oidc_browser", path="/oidc/callback")
+    if is_sign_in:
+        response.set_cookie("walkthrough_auth", auth_serializer().dumps({"sub": subject}), max_age=3600,
+                            httponly=True, secure=request.is_secure, samesite="Lax", path="/")
         return response
 
     reservation = reserve_redemption(code)
