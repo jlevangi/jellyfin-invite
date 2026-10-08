@@ -221,7 +221,7 @@ def oidc_callback():
         response.delete_cookie("oidc_browser", path="/oidc/callback")
         return response
 
-    response = redirect("/#confirmation")
+    response = redirect("/")
     response.delete_cookie("oidc_browser", path="/oidc/callback")
     if is_sign_in:
         response.set_cookie("walkthrough_auth", auth_serializer().dumps({"sub": subject}), max_age=3600,

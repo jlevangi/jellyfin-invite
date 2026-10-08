@@ -5,13 +5,13 @@
   const panel = root.querySelector('main');
   const intro = root.querySelector('.guide-intro');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  const sections = ['sign-in', 'confirmation', 'seerr', 'jellyfin', 'complete'];
+  const sections = ['sign-in', 'seerr', 'jellyfin', 'complete'];
   const sectionMenu = root.querySelector('.guide-sections');
   let current = -1;
   let moving = false;
   const linkedStep = sections.indexOf(location.hash.slice(1));
   if (linkedStep !== -1) current = linkedStep;
-  else if (root.dataset.confirmed === 'true' && location.hash === '') current = 1;
+  else if (root.dataset.resumeStep) current = parseInt(root.dataset.resumeStep, 10);
 
   function show(n, focus = true) {
     current = n;

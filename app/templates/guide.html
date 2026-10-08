@@ -2,7 +2,7 @@
 {% block title %}Jellyfin and Requests Guide{% endblock %}
 {% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/guide.css') }}">{% endblock %}
 {% block body %}
-<div class="wrap guide-walkthrough" data-authenticated="{{ 'true' if authenticated else 'false' }}" data-resume-step="{{ 1 if authenticated else '' }}">
+<div class="wrap guide-walkthrough" data-authenticated="{{ 'true' if authenticated else 'false' }}" data-resume-step="{{ 0 if authenticated else '' }}">
   <div class="guide-intro" aria-labelledby="intro-title">
     <section class="hero card welcome-start">
     <div class="eyebrow">Pierce's media setup</div>
@@ -30,43 +30,50 @@
   <main>
     <section class="card guide-step" data-step="0" aria-labelledby="welcome-title">
       <div class="service-brand"><img src="{{ url_for('static', filename='img/keycloak-logo.svg') }}" alt="Keycloak logo" width="48" height="48"><div><div class="service-name">Keycloak</div><span>Sign in to stuff</span></div></div>
-      <div class="eyebrow">Welcome</div><h2 id="welcome-title">First, sign in to confirm your account</h2>
+      <div class="eyebrow">Welcome</div><h2 id="welcome-title">{% if authenticated %}Welcome back!{% else %}First, sign in to confirm your account{% endif %}</h2>
+      {% if authenticated %}
+      <div class="msg ok" role="status"><p><strong>You’re logged in!</strong></p><p>Continue to Seerr setup.</p></div>
+      {% else %}
       <p>Tap <strong>Sign in with Keycloak</strong> below. Use your Google or email account. This is the account you'll use to sign into everything.</p>
       <a class="sso-example" href="{{ url_for('main.oidc_sign_in') }}">Sign in with Keycloak</a>
-      {% if authenticated %}<p class="msg ok" role="status"><strong>You’re logged in!</strong> Sign-in confirmed: Keycloak returned a verified email for this browser.</p>
-      {% else %}<p class="small">New here? Use the invite link Pierce sent you to join, or choose email signup on that page.</p>{% endif %}
+      <p class="small">New here? Use the invite link Pierce sent you to join, or choose email signup on that page.</p>
+      {% endif %}
       <div class="step-actions"><span></span><button class="btn secondary next-step" type="button">Continue</button></div>
     </section>
-    <section class="card guide-step" data-step="1" aria-labelledby="verified-title" hidden>
-      <div class="service-brand"><img src="{{ url_for('static', filename='img/keycloak-logo.svg') }}" alt="Keycloak logo" width="48" height="48"><div><div class="service-name">Keycloak</div><span>Sign in to stuff</span></div></div>
-      <div class="eyebrow">Sign-in return</div><h2 id="verified-title">Check that you returned here</h2>
-      {% if authenticated %}<div class="msg ok" role="status"><p><strong>You’re logged in!</strong></p><p>Continue to Seerr setup.</p></div>{% else %}<p class="note warn">The walkthrough cannot confirm sign-in yet. Start the Keycloak sign-in; the confirmation appears when its verified callback returns to this browser.</p><a class="sso-example" href="{{ url_for('main.oidc_sign_in') }}">Sign in with Keycloak</a>{% endif %}
-      <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><button class="btn next-step" type="button">Continue</button></div>
-    </section>
-    <section class="card guide-step" data-step="2" aria-labelledby="requests-title" hidden>
+    <section class="card guide-step" data-step="1" aria-labelledby="requests-title" hidden>
       <div class="service-brand"><img class="seerr-logo" src="{{ url_for('static', filename='img/seerr-logo.svg') }}" alt="Seerr logo" width="48" height="48"><div><div class="service-name">Seerr</div><span>Request stuff</span></div></div>
       <div class="eyebrow">Seerr</div><h2 id="requests-title">Install Seerr on your phone</h2>
       <p>Open Seerr and sign in with your Keycloak account.</p>
       <div class="server-address"><p>Tap the address to copy it:</p><button class="server-address-copy" id="copySeerrAddress" type="button" aria-label="Copy Seerr address"><code id="seerrAddress">{{ requests_url }}</code></button><span id="copySeerrStatus" role="status" aria-live="polite"></span></div>
       <div class="grid install-grid"><div><h3>iPhone or iPad</h3><ol><li>Open Seerr in <strong>Safari</strong>.</li><li>Tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.</li><li>Tap <strong>Add</strong>. If the option is missing, use Safari and scroll the Share list.</li></ol></div><div><h3>Android</h3><ol><li>Open Seerr in <strong>Chrome</strong>.</li><li>Tap the three-dot menu, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li><li>Confirm the prompt. The browser may use different wording.</li></ol></div></div>
       <p class="small">Seerr is a separate site, so this guide cannot detect whether installation finished. Complete it there, or skip and return here.</p>
-      <div class="welcome-services"><a href="{{ requests_url }}" target="_blank" rel="noopener"><img src="{{ url_for('static', filename='img/seerr-logo.svg') }}" alt=""><span><strong>Open Seerr</strong><small>{{ requests_url }}</small></span><span class="shortcut-arrow" aria-hidden="true">&#8594;</span></a></div>
+      <div class="welcome-services"><a href="{{ requests_url }}" target="_blank" rel="noopener"><img src="{{ url_for('static', filename='img/seerr-logo.svg') }}" alt=""><span><strong>Open Seerr</strong><small>{{ requests_url }}</small></span></a></div>
       <h3>Request something</h3><ol><li>Search for a movie or show.</li><li>Open a result and select <strong>Request</strong>.</li><li><strong>Pending</strong> means processing; <strong>Approved</strong> means accepted; <strong>Available</strong> means ready in Jellyfin. Popular releases may take about 30 minutes; niche items can take a day or two.</li></ol>
       <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><button class="btn next-step" type="button">Done</button></div>
     </section>
-    <section class="card guide-step" data-step="3" aria-labelledby="jellyfin-title" hidden>
+    <section class="card guide-step" data-step="2" aria-labelledby="jellyfin-title" hidden>
       <div class="service-brand"><img src="{{ url_for('static', filename='img/jellyfin-logo.png') }}" alt="Jellyfin logo" width="48" height="48"><div><div class="service-name">Jellyfin</div><span>Watch stuff</span></div></div>
       <div class="eyebrow">Watch media</div><h2 id="jellyfin-title">Sign in to Jellyfin</h2>
       <ol><li>Open <a href="{{ jellyfin_url }}" target="_blank" rel="noopener">{{ jellyfin_url }}</a> on a phone or computer, or install the Jellyfin app.</li><li>Enter the server address below.</li><li>Choose <strong>Sign in with Keycloak</strong>—do not type into the ordinary Jellyfin password boxes.</li></ol>
       <div class="server-address"><p>Tap the address to copy it into the Jellyfin app:</p><button class="server-address-copy" id="copyJellyfinAddress" type="button" aria-label="Copy Jellyfin server address"><code id="jellyfinAddress">{{ jellyfin_url }}</code></button><span id="copyAddressStatus" role="status" aria-live="polite"></span></div>
       <figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-sign-in-options.jpg') }}" alt="Jellyfin sign-in options with Sign in with Keycloak circled"><figcaption>On Jellyfin, choose “Sign in with Keycloak” to use SSO.</figcaption></figure>
-      <p>On a TV, sign in on your phone first. Install the Jellyfin TV app; if asked, enter <strong>{{ jellyfin_url }}</strong>, choose <strong>QuickConnect</strong>, and enter the TV code on your signed-in phone or computer to approve it.</p>
       <h3>Set up your TV with Quick Connect</h3>
-      <div class="shot-grid"><figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-server-address.jpg') }}" alt="Jellyfin server address screen"><figcaption>1. Enter the server address above.</figcaption></figure><figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-login.jpg') }}" alt="Jellyfin login screen with Quick Connect option"><figcaption>2. Choose Quick Connect on your TV.</figcaption></figure><figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-quick-connect.jpg') }}" alt="Jellyfin Quick Connect screen"><figcaption>3. Find the code displayed on your TV.</figcaption></figure><figure class="guide-shot"><img src="{{ url_for('static', filename='img/immich-quick-connect.jpg') }}" alt="Jellyfin device approval screen"><figcaption>4. Enter the code on your signed-in phone.</figcaption></figure></div>
+      <ol>
+        <li>Enter the server address above.</li>
+        <li>Choose <strong>Quick Connect</strong> on your TV.</li>
+        <li>Find the code displayed on your TV.</li>
+        <li>Enter the code on your signed-in phone.</li>
+      </ol>
+      <div class="shot-grid">
+        <figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-server-address.jpg') }}" alt="Jellyfin server address screen"></figure>
+        <figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-login.jpg') }}" alt="Jellyfin login screen with Quick Connect option"></figure>
+        <figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-quick-connect.jpg') }}" alt="Jellyfin Quick Connect screen"></figure>
+        <figure class="guide-shot"><img src="{{ url_for('static', filename='img/immich-quick-connect.jpg') }}" alt="Jellyfin device approval screen"></figure>
+      </div>
       <div class="note warn"><strong>Note:</strong> If playback is slow, lower playback quality in player settings. If you get stuck, tell Pierce your device/browser, step, and any error screenshot.</div>
       <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><a class="btn secondary" href="{{ jellyfin_url }}" target="_blank" rel="noopener">Open Jellyfin</a><button class="btn next-step" type="button">Finish</button></div>
     </section>
-    <section class="card guide-step" data-step="4" aria-labelledby="complete-title" hidden>
+    <section class="card guide-step" data-step="3" aria-labelledby="complete-title" hidden>
       <div class="eyebrow">Guide complete</div><h2 id="complete-title">You're all set!</h2>
       <p>You can return to this guide anytime. Use Jellyfin to watch available media and Seerr to request more; both use the same Keycloak sign-in.</p>
       <div class="completion-links">

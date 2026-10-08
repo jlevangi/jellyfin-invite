@@ -45,7 +45,7 @@ def test_healthz(client):
 def test_guide_page_renders_core_sections(client):
     res = client.get("/")
     assert res.status_code == 200
-    for text in (b"Sign in with Keycloak", b"Add to Home Screen", b"QuickConnect", b"https://jellyfin.example.test", b"https://request.example.test", b"Get Started", b"You're all set!", b"jellyfin-logo.png", b"seerr-logo.svg"):
+    for text in (b"Sign in with Keycloak", b"Add to Home Screen", b"Quick Connect", b"https://jellyfin.example.test", b"https://request.example.test", b"Get Started", b"You're all set!", b"jellyfin-logo.png", b"seerr-logo.svg"):
         assert text in res.data
     assert b'data-step="0"' in res.data
     assert b'role="status" aria-live="polite"' in res.data
@@ -234,7 +234,7 @@ def test_oidc_invite_flow_grants_existing_keycloak_user(client, monkeypatch):
     assert "HttpOnly" in cookie and "SameSite=Lax" in cookie
 
     callback = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": params["state"][0]}))
-    assert callback.status_code == 302 and callback.headers["Location"] == "/#confirmation"
+    assert callback.status_code == 302 and callback.headers["Location"] == "/"
     assert ("grant", "keycloak-user-id") in FakeKeycloak.calls
 
     listed = client.get("/api/admin/invites", headers=auth())
@@ -262,10 +262,10 @@ def test_oidc_sign_in_binds_browser_confirms_and_does_not_redeem_invite(client, 
     params = urllib.parse.parse_qs(urllib.parse.urlparse(start.headers["Location"]).query)
     callback = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": params["state"][0]}))
     cookies = callback.headers.getlist("Set-Cookie")
-    assert callback.status_code == 302 and callback.headers["Location"] == "/#confirmation"
+    assert callback.status_code == 302 and callback.headers["Location"] == "/"
     assert any(cookie.startswith("oidc_browser=;") for cookie in cookies)
     assert any(cookie.startswith("walkthrough_auth=") for cookie in cookies)
-    assert client.get("/#confirmation").data.count(b"Sign-in confirmed") >= 1
+    assert client.get("/").data.count(b"Welcome back!") >= 1
     assert not any(call[0] == "grant" for call in FakeKeycloak.calls)
     assert client.get("/api/admin/invites", headers=auth()).json["invites"][0]["redemptions"] == []
     replay = client.get("/oidc/callback?" + urllib.parse.urlencode({"code": "oidc-code", "state": params["state"][0]}))
