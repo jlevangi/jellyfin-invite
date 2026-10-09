@@ -28,6 +28,7 @@ class TestConfig:
     PUBLIC_BASE_URL = "https://join.example.test"
     OIDC_REDIRECT_URI = "https://join.example.test/oidc/callback"
     OIDC_IDP_HINT = "google"
+    KEYCLOAK_ADMIN_SUBJECTS = frozenset({"admin-subject"})
     JELLYFIN_URL = "https://jellyfin.example.test"
     REQUESTS_URL = "https://request.example.test"
 

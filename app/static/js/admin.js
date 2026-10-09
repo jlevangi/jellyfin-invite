@@ -1,17 +1,29 @@
-token.value = sessionStorage.inviteToken || '';
+const byId = id => document.getElementById(id);
+const status = byId('status');
+const tokenInput = byId('token');
+const login = byId('login'), app = byId('app'), loginStatus = byId('loginStatus');
+const unlockBtn = byId('unlockBtn'), refreshBtn = byId('refreshBtn'), lockBtn = byId('lockBtn');
+const inviteForm = byId('inviteForm'), note = byId('note'), days = byId('days'), maxUses = byId('maxUses'), createBtn = byId('createBtn');
+const listStatus = byId('listStatus'), out = byId('out'), toast = byId('toast');
+const activeCount = byId('activeCount'), redemptionCount = byId('redemptionCount'), expiredCount = byId('expiredCount'), revokedCount = byId('revokedCount');
+let csrfToken = null;
+let authMode = 'password';
 
-function headers() {
-  return {'X-Admin-Token': sessionStorage.inviteToken || token.value, 'Content-Type': 'application/json'};
+function headers(options = {}) {
+  const result = {'Content-Type': 'application/json', ...(options.headers || {})};
+  if (authMode === 'password') result['X-Admin-Token'] = sessionStorage.inviteToken || tokenInput.value;
+  if (authMode === 'cookie' && csrfToken && options.method && options.method !== 'GET') result['X-CSRF-Token'] = csrfToken;
+  return result;
 }
 
 async function api(url, options = {}) {
-  const response = await fetch(url, {...options, headers: headers()});
+  const response = await fetch(url, {...options, headers: headers(options), credentials: 'same-origin'});
   const json = await response.json();
   if (!response.ok || !json.ok) throw Error(json.message || 'Request failed');
   return json;
 }
 
-function state(invite) {
+function inviteState(invite) {
   if (invite.revoked_at) return 'revoked';
   if (new Date(invite.expires_at) < new Date()) return 'expired';
   if (invite.use_count >= invite.max_uses) return 'exhausted';
@@ -19,165 +31,117 @@ function state(invite) {
 }
 
 function say(message) {
-  toast.textContent = message;
-  toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 1800);
+  toast.textContent = message; toast.classList.remove('hidden');
+  setTimeout(() => toast.classList.add('hidden'), 2200);
 }
 
 async function copy(value) {
-  await navigator.clipboard?.writeText(value);
-  say('Invite link copied');
+  try { await navigator.clipboard.writeText(value); say('Invite link copied'); }
+  catch { say('Copy failed. Select and copy the invite link manually.'); }
 }
 
-function cell(label, content = '') {
-  const td = document.createElement('td');
-  td.dataset.label = label;
-  if (content instanceof Node) td.append(content);
-  else td.textContent = content;
-  return td;
+function button(label, callback, className = 'secondary') {
+  const element = document.createElement('button'); element.type = 'button'; element.className = className;
+  element.textContent = label; element.addEventListener('click', callback); return element;
 }
 
-function usage(invite) {
-  const wrap = document.createElement('div');
-  const count = document.createElement('strong');
-  count.className = 'usage-count';
-  count.textContent = `${invite.use_count} of ${invite.max_uses} used`;
-  wrap.append(count);
+function render(invite) {
+  const status = inviteState(invite), card = document.createElement('article'); card.className = 'invite-card';
+  const head = document.createElement('div'); head.className = 'invite-card-head';
+  const pill = document.createElement('span'); pill.className = `pill ${status}`; pill.textContent = status;
+  const code = document.createElement('code'); code.className = 'invite-code'; code.textContent = invite.code;
+  head.append(pill, code); card.append(head);
+  const meta = document.createElement('div'); meta.className = 'invite-card-meta';
+  const note = document.createElement('span'); note.textContent = invite.note || 'No note';
+  const expires = document.createElement('span'); expires.textContent = `Expires ${new Date(invite.expires_at).toLocaleString()}`;
+  meta.append(note, expires); card.append(meta);
+  const usage = document.createElement('p'); usage.className = 'usage-count'; usage.textContent = `${invite.use_count} of ${invite.max_uses} uses`; card.append(usage);
   if (invite.redemptions.length) {
-    const details = document.createElement('details');
-    details.className = 'redemptions';
-    const summary = document.createElement('summary');
-    summary.textContent = `View ${invite.use_count} redemption${invite.use_count === 1 ? '' : 's'}`;
+    const details = document.createElement('details'); details.className = 'redemptions';
+    const summary = document.createElement('summary'); summary.textContent = `View ${invite.use_count} redemption${invite.use_count === 1 ? '' : 's'}`;
     const list = document.createElement('ul');
-    invite.redemptions.forEach(redemption => {
-      const item = document.createElement('li');
-      item.textContent = `${redemption.email} — ${new Date(redemption.redeemed_at).toLocaleString()}`;
-      list.append(item);
-    });
-    details.append(summary, list);
-    wrap.append(details);
+    invite.redemptions.forEach(redemption => { const item = document.createElement('li'); item.textContent = `${redemption.email} — ${new Date(redemption.redeemed_at).toLocaleString()}`; list.append(item); });
+    details.append(summary, list); card.append(details);
   }
-  return wrap;
-}
-
-function row(invite) {
-  const status = state(invite);
-  const url = 'https://join.levangie.dev/j/' + invite.code;
-  const tr = document.createElement('tr');
-
-  const pill = document.createElement('span');
-  pill.className = 'pill ' + status;
-  pill.textContent = status;
-  tr.append(cell('Status', pill));
-
-  const copyButton = document.createElement('button');
-  copyButton.className = 'invite-link-btn';
-  copyButton.title = 'Copy invite link';
-  copyButton.setAttribute('aria-label', 'Copy invite link');
-  copyButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copy invite link</span>';
-  copyButton.addEventListener('click', () => copy(url));
-  const linkCell = document.createElement('td');
-  linkCell.dataset.label = 'Invite link';
-  linkCell.className = 'link-cell';
-  const codeSpan = document.createElement('code');
-  codeSpan.className = 'invite-code';
-  codeSpan.textContent = invite.code;
-  linkCell.append(codeSpan, copyButton);
-  tr.append(linkCell);
-
-  tr.append(cell('Note', invite.note || '—'));
-  tr.append(cell('Expires', new Date(invite.expires_at).toLocaleString()));
-  tr.append(cell('Usage', usage(invite)));
-
-  const actions = document.createElement('div');
-  actions.className = 'row-actions';
-  if (status === 'active') {
-    const revokeButton = document.createElement('button');
-    revokeButton.className = 'secondary';
-    revokeButton.textContent = 'Revoke';
-    revokeButton.addEventListener('click', () => revoke(invite.code));
-    actions.append(revokeButton);
-    tr.append(cell('Actions', actions));
-  } else {
-    tr.append(cell('Actions', ''));
-  }
-  return tr;
+  const inviteUrl = document.createElement('a'); inviteUrl.className = 'invite-url'; inviteUrl.href = invite.url; inviteUrl.textContent = invite.url;
+  inviteUrl.target = '_blank'; inviteUrl.rel = 'noopener noreferrer';
+  card.append(inviteUrl);
+  const actions = document.createElement('div'); actions.className = 'invite-card-actions';
+  actions.append(button('Copy link', () => copy(invite.url), ''));
+  if (status === 'active') actions.append(button('Revoke', () => revoke(invite.code), 'secondary danger'));
+  card.append(actions); return card;
 }
 
 function counts(items) {
-  const count = {active: 0, expired: 0, revoked: 0, redemptions: 0};
-  items.forEach(invite => {
-    const status = state(invite);
-    if (status === 'active') count.active++;
-    if (status === 'expired') count.expired++;
-    if (status === 'revoked') count.revoked++;
-    count.redemptions += invite.use_count;
-  });
-  activeCount.textContent = count.active;
-  redemptionCount.textContent = count.redemptions;
-  expiredCount.textContent = count.expired;
-  revokedCount.textContent = count.revoked;
+  const totals = {active: 0, expired: 0, revoked: 0, redemptions: 0};
+  items.forEach(invite => { const current = inviteState(invite); if (current in totals && current !== 'redemptions') totals[current]++; totals.redemptions += invite.use_count; });
+  activeCount.textContent = totals.active; redemptionCount.textContent = totals.redemptions;
+  expiredCount.textContent = totals.expired; revokedCount.textContent = totals.revoked;
+}
+
+function showLogin(message = '') {
+  app.classList.add('hidden'); login.classList.remove('hidden'); loginStatus.textContent = message;
+  loginStatus.classList.toggle('error', Boolean(message));
 }
 
 async function unlock() {
+  loginStatus.textContent = 'Signing in…'; loginStatus.classList.remove('error'); unlockBtn.disabled = true; authMode = 'password';
   try {
-    sessionStorage.inviteToken = token.value;
-    await list();
-    login.classList.add('hidden');
-    app.classList.remove('hidden');
-  } catch (error) {
-    sessionStorage.removeItem('inviteToken');
-    loginStatus.textContent = error.message;
-  }
+    sessionStorage.inviteToken = tokenInput.value; await list(); login.classList.add('hidden'); app.classList.remove('hidden'); lockBtn.classList.remove('hidden');
+  } catch (error) { sessionStorage.removeItem('inviteToken'); loginStatus.textContent = error.message; loginStatus.classList.add('error'); }
+  finally { unlockBtn.disabled = false; }
 }
 
-function lock() {
-  sessionStorage.removeItem('inviteToken');
-  token.value = '';
-  app.classList.add('hidden');
-  login.classList.remove('hidden');
+async function logout() {
+  lockBtn.disabled = true;
+  try { await api('/api/admin/logout', {method: 'POST'}); }
+  catch (error) { if (authMode === 'cookie') { loginStatus.textContent = error.message; loginStatus.classList.add('error'); lockBtn.disabled = false; return; } }
+  sessionStorage.removeItem('inviteToken'); tokenInput.value = ''; csrfToken = null; authMode = 'password';
+  app.classList.add('hidden'); lockBtn.classList.add('hidden'); login.classList.remove('hidden'); loginStatus.textContent = ''; loginStatus.classList.remove('error'); lockBtn.disabled = false;
 }
 
 async function list() {
-  const json = await api('/api/admin/invites');
-  counts(json.invites);
-  out.replaceChildren(...json.invites.map(row));
-  if (!json.invites.length) {
-    const tr = document.createElement('tr');
-    const td = cell('', 'No invites yet.');
-    td.colSpan = 6;
-    td.className = 'muted empty';
-    tr.append(td);
-    out.append(tr);
-  }
+  listStatus.textContent = 'Loading invites…'; listStatus.classList.remove('error'); refreshBtn.disabled = true;
+  try {
+    const json = await api('/api/admin/invites'); counts(json.invites); out.replaceChildren(...json.invites.map(render));
+    if (!json.invites.length) { const empty = document.createElement('p'); empty.className = 'muted empty'; empty.textContent = 'No invites yet. Create one above.'; out.append(empty); }
+    listStatus.textContent = `${json.invites.length} invite${json.invites.length === 1 ? '' : 's'}`;
+  } catch (error) {
+    listStatus.textContent = error.message; listStatus.classList.add('error');
+    if (authMode === 'cookie' && /unauthorized|session|admin/i.test(error.message)) { csrfToken = null; showLogin('Your admin session expired. Sign in again.'); }
+    throw error;
+  } finally { refreshBtn.disabled = false; }
 }
 
-async function create() {
+async function create(event) {
+  event.preventDefault(); status.textContent = 'Creating invite…'; status.classList.remove('error'); createBtn.disabled = true;
   try {
-    const json = await api('/api/admin/invites', {
-      method: 'POST',
-      body: JSON.stringify({note: note.value, expiresDays: days.value, maxUses: maxUses.value}),
-    });
-    status.textContent = 'Created ' + json.url;
-    await copy(json.url);
-    note.value = '';
-    await list();
-  } catch (error) {
-    status.textContent = error.message;
-  }
+    const json = await api('/api/admin/invites', {method: 'POST', body: JSON.stringify({note: note.value, expiresDays: days.value, maxUses: maxUses.value})});
+    note.value = ''; status.textContent = 'Invite created.'; await copy(json.url); await list();
+  } catch (error) { status.textContent = error.message; status.classList.add('error'); }
+  finally { createBtn.disabled = false; }
 }
 
 async function revoke(code) {
   if (!confirm('Revoke this invite?')) return;
-  await api('/api/admin/invites/' + code + '/revoke', {method: 'POST'});
-  say('Invite revoked');
-  await list();
+  try { await api(`/api/admin/invites/${encodeURIComponent(code)}/revoke`, {method: 'POST', body: '{}'}); say('Invite revoked'); await list(); }
+  catch (error) { say(error.message); }
 }
 
 unlockBtn.addEventListener('click', unlock);
-refreshBtn.addEventListener('click', list);
-lockBtn.addEventListener('click', lock);
-createBtn.addEventListener('click', create);
-token.addEventListener('keydown', event => { if (event.key === 'Enter') unlock(); });
+refreshBtn.addEventListener('click', () => list().catch(() => {}));
+lockBtn.addEventListener('click', logout);
+inviteForm.addEventListener('submit', create);
+tokenInput.addEventListener('keydown', event => { if (event.key === 'Enter') unlock(); });
 
-if (token.value) unlock();
+async function initialize() {
+  try {
+    const session = await fetch('/api/admin/session', {credentials: 'same-origin'}).then(response => response.json());
+    if (session.authenticated) {
+      authMode = 'cookie'; csrfToken = session.csrfToken; await list(); login.classList.add('hidden'); app.classList.remove('hidden'); lockBtn.classList.remove('hidden'); return;
+    }
+  } catch { /* Password sign-in remains available if session discovery fails. */ }
+  const savedToken = sessionStorage.inviteToken;
+  if (savedToken) { tokenInput.value = savedToken; await unlock(); }
+}
+initialize();

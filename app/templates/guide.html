@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Jellyfin and Requests Guide{% endblock %}
+{% block title %}Pierce's Media Guide{% endblock %}
 {% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/guide.css') }}">{% endblock %}
 {% block body %}
 <div class="wrap guide-walkthrough" data-authenticated="{{ 'true' if authenticated else 'false' }}">
@@ -52,14 +52,19 @@
     </section>
     <section class="card guide-step" data-step="2" aria-labelledby="jellyfin-title" hidden>
       <div class="service-brand"><img src="{{ url_for('static', filename='img/jellyfin-logo.png') }}" alt="Jellyfin logo" width="48" height="48"><div><div class="service-name">Jellyfin</div><span>Watch stuff</span></div></div>
-      <div class="eyebrow">Watch media</div><h2 id="jellyfin-title">Sign in to Jellyfin</h2>
-      <h2>Using the Website</h2>
+      <div class="eyebrow">Watching Jellyfin</div><h1 id="jellyfin-title">Sign in to Jellyfin</h1>
+      <nav class="jellyfin-section-links" aria-label="Jellyfin setup sections">
+        <a href="#jellyfin-website"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg><span>Watching on the Web</span></a>
+        <a href="#jellyfin-mobile"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg><span>Mobile App Setup</span></a>
+        <a href="#jellyfin-tv"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="13" rx="2"/><path d="M8 21h8M12 17.5V21"/></svg><span>TV Setup</span></a>
+      </nav>
+      <h2 id="jellyfin-website">Using the Website</h2>
       <ol><li>Open <a href="{{ jellyfin_url }}" target="_blank" rel="noopener">{{ jellyfin_url }}</a> on a phone or computer.</li><li>Choose <strong>Sign in with Keycloak</strong>—do not type into the ordinary Jellyfin password boxes.</li></ol>
       <figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-sign-in-options.jpg') }}" alt="Jellyfin sign-in options with Sign in with Keycloak circled"><figcaption>On Jellyfin, choose “Sign in with Keycloak” to use SSO.</figcaption></figure>
-      <h2>Using the Mobile App</h2>
+      <h2 id="jellyfin-mobile">Using the Mobile App</h2>
       <ol><li>Install the Jellyfin app and open it.</li><li>Enter the server address below.</li><li>Choose <strong>Sign in with Keycloak</strong>.</li></ol>
       <div class="server-address"><p>Tap the address to copy it into the Jellyfin app:</p><button class="server-address-copy" id="copyJellyfinAddress" type="button" aria-label="Copy Jellyfin server address"><code id="jellyfinAddress">{{ jellyfin_url }}</code></button><span id="copyAddressStatus" role="status" aria-live="polite"></span></div>
-      <h2>Set up your TV with Quick Connect</h2>
+      <h2 id="jellyfin-tv">Set up your TV with Quick Connect</h2>
       <p><strong>Note:</strong> Before starting on your TV, make sure you have opened the Jellyfin app or website on your phone and logged in there first. Then you can open the Quick Connect menu.</p>
       <ol>
         <li>Enter the server address above.</li>

@@ -9,34 +9,38 @@
   const sectionMenu = root.querySelector('.guide-sections');
   let current = -1;
   let moving = false;
+  const jellyfinTargets = ['jellyfin-website', 'jellyfin-mobile', 'jellyfin-tv'];
+  const subsectionHash = () => jellyfinTargets.includes(location.hash.slice(1)) ? location.hash.slice(1) : null;
+  const linkedSubsection = subsectionHash();
   const linkedStep = sections.indexOf(location.hash.slice(1));
-  if (linkedStep !== -1) current = linkedStep;
+  if (linkedSubsection) current = 2;
+  else if (linkedStep !== -1) current = linkedStep;
 
-  function show(n, focus = true) {
+  function show(n, focus = true, preserveHash = false) {
     current = n;
     intro.hidden = current !== -1;
     panel.hidden = current === -1;
     root.classList.toggle('is-started', current !== -1);
     steps.forEach((step, i) => { step.hidden = i !== current; });
     try { sessionStorage.setItem('guide-step', String(current)); } catch {}
-    history.replaceState(null, '', `${location.pathname}${location.search}${current === -1 ? '' : '#' + sections[current]}`);
+    if (!preserveHash) history.replaceState(null, '', `${location.pathname}${location.search}${current === -1 ? '' : '#' + sections[current]}`);
     sectionMenu.querySelectorAll('a').forEach(link => {
       const activeSection = current === 0 ? 'sign-in' : current === 1 ? 'seerr' : 'jellyfin';
       if (current !== -1 && link.hash === '#' + activeSection) link.setAttribute('aria-current', 'step');
       else link.removeAttribute('aria-current');
     });
     if (focus) {
-      const heading = current === -1 ? intro.querySelector('h1') : steps[current].querySelector('h2');
+      const heading = current === -1 ? intro.querySelector('h1') : steps[current].querySelector('h1, h2');
       heading.tabIndex = -1;
       heading.focus({ preventScroll: true });
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
   }
 
-  async function move(n) {
+  async function move(n, preserveHash = false) {
     n = Math.max(-1, Math.min(steps.length - 1, n));
     if (moving || n === current) return;
-    if (reducedMotion.matches || !panel.animate) { show(n); return; }
+    if (reducedMotion.matches || !panel.animate) { show(n, true, preserveHash); return; }
     moving = true;
     const direction = n > current ? 1 : -1;
     const outgoing = current === -1 ? intro : steps[current];
@@ -44,7 +48,7 @@
     try {
       await outgoing.animate([{ opacity: 1, transform: 'translateX(0)' }, { opacity: 0, transform: `translateX(${-direction * 20}px)` }], { duration: 130, easing: 'ease-in' }).finished;
       window.scrollTo({ top: 0, behavior: 'instant' });
-      show(n, false);
+      show(n, false, preserveHash);
       const incoming = current === -1 ? intro : steps[current];
       const container = current === -1 ? intro : panel;
       const newHeight = incoming.getBoundingClientRect().height;
@@ -56,8 +60,8 @@
     } finally {
       panel.style.overflow = '';
       moving = false;
-      show(current, false);
-      const heading = current === -1 ? intro.querySelector('h1') : steps[current].querySelector('h2');
+      show(current, false, preserveHash);
+      const heading = current === -1 ? intro.querySelector('h1') : steps[current].querySelector('h1, h2');
       heading.tabIndex = -1;
       heading.focus({ preventScroll: true });
     }
@@ -78,7 +82,7 @@
 
   root.addEventListener('click', event => {
     const link = event.target.closest('.guide-sections a, .welcome-actions a, .welcome-services a');
-    if (link) {
+    if (link && link.origin === location.origin && link.pathname === location.pathname && sections.includes(link.hash.slice(1))) {
       event.preventDefault();
       void move(sections.indexOf(link.hash.slice(1)));
     }
@@ -87,9 +91,23 @@
     if (event.target.closest('.previous-step')) void move(current - 1);
     if (event.target.closest('#restartGuide')) void move(-1);
   });
-  window.addEventListener('hashchange', () => {
+  async function followHash() {
+    const targetId = subsectionHash();
+    if (targetId) {
+      if (current !== 2) await move(2, true);
+      else show(2, false, true);
+      const target = root.querySelector(`#${targetId}`);
+      target?.scrollIntoView({ behavior: reducedMotion.matches ? 'instant' : 'smooth', block: 'start' });
+      if (target) {
+        target.tabIndex = -1;
+        target.focus({ preventScroll: true });
+      }
+      return;
+    }
     const index = sections.indexOf(location.hash.slice(1));
     if (index !== -1) void move(index);
-  });
-  show(current);
+  }
+  window.addEventListener('hashchange', followHash);
+  show(current, false, Boolean(linkedSubsection));
+  if (linkedSubsection) void followHash();
 })();

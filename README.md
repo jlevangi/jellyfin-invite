@@ -5,7 +5,7 @@ https://join.levangie.dev.
 
 ## User flow
 
-1. Admin creates an invite at `/admin` (bearer `ADMIN_TOKEN`). Invites expire
+1. Admin creates an invite at `/invite` (header **Invite** button; bearer `ADMIN_TOKEN` or Keycloak). Invites expire
    after 1–90 days and allow 1–25 uses.
 2. User opens `/j/<code>` and either:
    - **Continue with Google**: Keycloak OIDC (`kc_idp_hint=google`), callback
@@ -34,6 +34,7 @@ https://join.levangie.dev.
 | `PUBLIC_BASE_URL` | `https://join.levangie.dev` |
 | `OIDC_REDIRECT_URI` | `$PUBLIC_BASE_URL/oidc/callback` |
 | `OIDC_IDP_HINT` | `google` (empty shows the Keycloak login page) |
+| `KEYCLOAK_ADMIN_SUBJECTS` | empty (OIDC admin disabled) |
 | `JELLYFIN_URL` | `https://jellyfin.levangie.org` |
 | `REQUESTS_URL` | `https://request.levangie.dev` |
 | `DB_PATH` | `/data/invites.sqlite3` |
@@ -42,8 +43,35 @@ The Keycloak client needs standard flow, the exact redirect URI above, and a
 service account allowed to query users, manage group membership and send
 action emails.
 
+### Admin OIDC
+
+Set `KEYCLOAK_ADMIN_SUBJECTS` to a comma-separated allowlist of stable Keycloak
+subject (`sub`) IDs. It defaults to empty, which disables OIDC admin sign-in.
+The `/invite/oidc` flow uses the existing `/oidc/callback`; allowed subjects get
+a separate one-hour HttpOnly admin session. Ordinary Keycloak users never gain
+admin access through group membership. Cookie-authenticated admin writes require
+the `X-CSRF-Token` returned by `GET /api/admin/session`; bearer `ADMIN_TOKEN`
+clients remain supported. Configure the Keycloak redirect URI as
+`$PUBLIC_BASE_URL/oidc/callback` as before.
+
+`GET /api/admin/invites` returns each invite's canonical URL using
+`PUBLIC_BASE_URL`, matching the URL returned by invite creation.
+
+The mobile dashboard uses invite cards with copy/revoke actions and expandable
+redemption history. Password sign-in remains available alongside Keycloak.
+On the Watching page, the top Web, Mobile, and TV buttons jump to bookmarkable
+setup sections (`#jellyfin-website`, `#jellyfin-mobile`, `#jellyfin-tv`).
+
 Deployment lives in `home-infra` at `argocd/manifests/jellyfin-invite`;
 secrets come from an ExternalSecret.
+
+## PWA
+
+Pierce's Media installs as a standalone PWA. The brand links Home; the header
+**Invite** button opens the invite dashboard at `/invite`. Offline mode
+shows a network-required notice only. The service worker caches the shared
+stylesheet, brand icon, and offline page; it never caches navigations or
+private/admin/API/OIDC/invite responses.
 
 ## Local development
 

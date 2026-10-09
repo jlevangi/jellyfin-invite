@@ -13,5 +13,6 @@ class Config:
     PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://join.levangie.dev")
     OIDC_REDIRECT_URI = os.environ.get("OIDC_REDIRECT_URI", PUBLIC_BASE_URL + "/oidc/callback")
     OIDC_IDP_HINT = os.environ.get("OIDC_IDP_HINT", "google")
+    KEYCLOAK_ADMIN_SUBJECTS = frozenset(filter(None, (s.strip() for s in os.environ.get("KEYCLOAK_ADMIN_SUBJECTS", "").split(","))))
     JELLYFIN_URL = os.environ.get("JELLYFIN_URL", "https://jellyfin.levangie.org")
     REQUESTS_URL = os.environ.get("REQUESTS_URL", "https://request.levangie.dev")

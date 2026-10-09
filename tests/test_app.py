@@ -65,7 +65,9 @@ def test_join_page_renders_code_and_no_direct_app_buttons(client):
 
 
 def test_oidc_callback_error_shows_sign_in_without_enrollment_controls(client):
-    res = client.get("/oidc/callback?error=access_denied")
+    start = client.get("/oidc/sign-in")
+    params = urllib.parse.parse_qs(urllib.parse.urlparse(start.location).query)
+    res = client.get("/oidc/callback?" + urllib.parse.urlencode({"error": "access_denied", "state": params["state"][0]}))
     assert res.status_code == 400
     assert b"Keycloak sign-in was cancelled or failed." in res.data
     assert b"role=\"alert\"" in res.data
@@ -75,7 +77,7 @@ def test_oidc_callback_error_shows_sign_in_without_enrollment_controls(client):
     assert b'id="form"' not in res.data
 
 def test_admin_requires_token(client):
-    page = client.get("/admin")
+    page = client.get("/invite")
     assert b"Admin password" in page.data
     assert b"Invite note" in page.data
     assert b"Expires after" in page.data
@@ -97,6 +99,7 @@ def test_admin_create_list_and_revoke_invite(client):
     listed = client.get("/api/admin/invites", headers=auth())
     assert listed.status_code == 200
     assert listed.json["invites"][0]["code"] == code
+    assert listed.json["invites"][0]["url"] == f"https://join.example.test/j/{code}"
     assert listed.json["invites"][0]["note"] == "friend"
     assert listed.json["invites"][0]["max_uses"] == 3
     assert listed.json["invites"][0]["use_count"] == 0
