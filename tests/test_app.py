@@ -49,7 +49,8 @@ def test_guide_page_renders_core_sections(client):
         assert text in res.data
     assert b'data-step="0"' in res.data
     assert b'role="status" aria-live="polite"' in res.data
-    assert b"jellyfin-sign-in-options.jpg" in res.data
+    assert b"video/keycloak-login.mp4" in res.data
+    assert b"video/quick-connect.mp4" in res.data
 
 
 def test_join_page_renders_code_and_no_direct_app_buttons(client):

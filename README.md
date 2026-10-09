@@ -18,11 +18,13 @@ https://join.levangie.dev.
    opens Keycloak without a Google hint and does not redeem an invite or grant
    access. Confirmation lasts one hour in a signed HttpOnly cookie.
 4. The guide walks through installing Seerr (`REQUESTS_URL`) in Safari or
-   Chrome, then Jellyfin login using the supplied screenshots and TV Quick
-   Connect. Installation must happen on Seerr itself; this separate guide
+   Chrome, then Jellyfin browser sign-in and mobile/TV Quick Connect using the
+   supplied walkthrough videos. Installation must happen on Seerr itself; this separate guide
    cannot trigger or detect Seerr installation.
 5. Group `jellyfin-users` grants the realm role checked by Jellyfin's SSO
-   plugin. Use **Sign in with Keycloak** in Jellyfin and Seerr. Explicit guide
+   plugin. Use **Sign in with Keycloak** in Jellyfin's web browser interface and
+   Seerr. Jellyfin mobile and TV apps use **Quick Connect**, approved from a
+   signed-in Jellyfin browser via **Settings → Quick Connect**. Explicit guide
    section links are bookmarkable; Home always opens Welcome.
 
 ## Configuration
@@ -59,8 +61,8 @@ clients remain supported. Configure the Keycloak redirect URI as
 
 The mobile dashboard uses invite cards with copy/revoke actions and expandable
 redemption history. Password sign-in remains available alongside Keycloak.
-On the Watching page, the top Web, Mobile, and TV buttons jump to bookmarkable
-setup sections (`#jellyfin-website`, `#jellyfin-mobile`, `#jellyfin-tv`).
+On the Watching page, the top Web and Mobile/TV buttons jump to bookmarkable
+setup sections (`#jellyfin-website`, `#jellyfin-devices`).
 
 Deployment lives in `home-infra` at `argocd/manifests/jellyfin-invite`;
 secrets come from an ExternalSecret.

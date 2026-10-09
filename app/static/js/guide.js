@@ -9,7 +9,7 @@
   const sectionMenu = root.querySelector('.guide-sections');
   let current = -1;
   let moving = false;
-  const jellyfinTargets = ['jellyfin-website', 'jellyfin-mobile', 'jellyfin-tv'];
+  const jellyfinTargets = ['jellyfin-website', 'jellyfin-devices'];
   const subsectionHash = () => jellyfinTargets.includes(location.hash.slice(1)) ? location.hash.slice(1) : null;
   const linkedSubsection = subsectionHash();
   const linkedStep = sections.indexOf(location.hash.slice(1));

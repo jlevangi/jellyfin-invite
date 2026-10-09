@@ -56,35 +56,33 @@
       <div class="eyebrow">Watching Jellyfin</div><h1 id="jellyfin-title">Sign in to Jellyfin</h1>
       <nav class="jellyfin-section-links" aria-label="Jellyfin setup sections">
         <a href="#jellyfin-website"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg><span>Watching on the Web</span></a>
-        <a href="#jellyfin-mobile"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg><span>Mobile App Setup</span></a>
-        <a href="#jellyfin-tv"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="13" rx="2"/><path d="M8 21h8M12 17.5V21"/></svg><span>TV Setup</span></a>
+        <a href="#jellyfin-devices"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg><span>Mobile and TV Setup</span></a>
       </nav>
       <h2 id="jellyfin-website">Using the Website</h2>
+      <div class="note warn"><strong>Keycloak sign-in works only in a web browser.</strong> Use Quick Connect for the Jellyfin mobile app or TV, and approve it from Jellyfin in your signed-in browser.</div>
       <ol><li>Open <a href="{{ jellyfin_url }}" target="_blank" rel="noopener">{{ jellyfin_url }}</a> on a phone or computer.</li><li>Choose <strong>Sign in with Keycloak</strong>—do not type into the ordinary Jellyfin password boxes.</li></ol>
-      <figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-sign-in-options.jpg') }}" alt="Jellyfin sign-in options with Sign in with Keycloak circled"><figcaption>On Jellyfin, choose “Sign in with Keycloak” to use SSO.</figcaption></figure>
-      <h2 id="jellyfin-mobile">Using the Mobile App</h2>
-      <ol><li>Install the Jellyfin app and open it.</li><li>Enter the server address below.</li><li>Choose <strong>Sign in with Keycloak</strong>.</li></ol>
-      <div class="server-address"><p>Tap the address to copy it into the Jellyfin app:</p><button class="server-address-copy" id="copyJellyfinAddress" type="button" aria-label="Copy Jellyfin server address"><code id="jellyfinAddress">{{ jellyfin_url }}</code></button><span id="copyAddressStatus" role="status" aria-live="polite"></span></div>
-      <h2 id="jellyfin-tv">Set up your TV with Quick Connect</h2>
-      <p><strong>Note:</strong> Before starting on your TV, make sure you have opened the Jellyfin app or website on your phone and logged in there first. Then you can open the Quick Connect menu.</p>
+      <figure class="guide-shot"><video autoplay loop muted playsinline><source src="{{ url_for('static', filename='video/keycloak-login.mp4') }}" type="video/mp4"></video></figure>
+      <h2 id="jellyfin-devices">Set up Mobile or TV (Quick Connect)</h2>
       <ol>
-        <li>Enter the server address above.</li>
-        <li>Choose <strong>Quick Connect</strong> on your TV.</li>
-        <li>Find the code displayed on your TV.</li>
-        <li>Enter the code on your signed-in phone.</li>
+        <li>In your phone or computer's browser, open <a href="{{ jellyfin_url }}" target="_blank" rel="noopener">Jellyfin</a> and choose <strong>Sign in with Keycloak</strong>. Stay signed in.</li>
+        <li>Install and open the Jellyfin app on your device. Enter the server address below.
+        <div class="server-address"><p>Tap the address to copy it into the Jellyfin app:</p><button class="server-address-copy" id="copyJellyfinAddress" type="button" aria-label="Copy Jellyfin server address"><code id="jellyfinAddress">{{ jellyfin_url }}</code></button><span id="copyAddressStatus" role="status" aria-live="polite"></span></div></li>
+        <li>Choose <strong>Quick Connect</strong> on the app's login screen (sometimes under <strong>Manual Login</strong>). Keep the displayed code open.</li>
+        <li>Switch back to Jellyfin in your browser. Open your profile menu, then <strong>Settings → Quick Connect</strong>.</li>
+        <li>Enter the code from your device and confirm. Your device will sign in automatically.</li>
       </ol>
-      <div class="shot-grid">
-        <figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-server-address.jpg') }}" alt="Jellyfin server address screen"></figure>
-        <figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-login.jpg') }}" alt="Jellyfin login screen with Quick Connect option"></figure>
-        <figure class="guide-shot"><img src="{{ url_for('static', filename='img/jellyfin-quick-connect.jpg') }}" alt="Jellyfin Quick Connect screen"></figure>
-        <figure class="guide-shot"><img src="{{ url_for('static', filename='img/immich-quick-connect.jpg') }}" alt="Jellyfin device approval screen"></figure>
-      </div>
+      <figure class="guide-shot">
+        <video autoplay loop muted playsinline>
+          <source src="{{ url_for('static', filename='video/quick-connect.mp4') }}" type="video/mp4">
+        </video>
+        <figcaption>Approve Quick Connect code</figcaption>
+      </figure>
       <div class="note warn"><strong>Note:</strong> If playback is slow, lower playback quality in player settings. If you get stuck, tell Pierce your device/browser, step, and any error screenshot.</div>
       <div class="step-actions"><button class="btn secondary previous-step" type="button">Back</button><a class="btn secondary" href="{{ jellyfin_url }}" target="_blank" rel="noopener">Open Jellyfin</a><button class="btn next-step" type="button">Finish</button></div>
     </section>
     <section class="card guide-step" data-step="3" aria-labelledby="complete-title" hidden>
       <div class="eyebrow">Guide complete</div><h2 id="complete-title">You're all set!</h2>
-      <p>You can return to this guide anytime. Use Jellyfin to watch available media and Seerr to request more; both use the same Keycloak sign-in.</p>
+      <p>You can return to this guide anytime. Use Jellyfin to watch available media and Seerr to request more. Sign in with Keycloak in your browser; use Quick Connect for Jellyfin mobile and TV apps.</p>
       <div class="completion-links">
         <a href="{{ jellyfin_url }}" aria-label="Open Jellyfin"><img src="{{ url_for('static', filename='img/jellyfin-logo.png') }}" alt="Jellyfin logo"></a>
         <a href="{{ requests_url }}" aria-label="Open Seerr"><img src="{{ url_for('static', filename='img/seerr-logo.svg') }}" alt="Seerr logo"></a>
