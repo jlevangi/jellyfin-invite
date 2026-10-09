@@ -1,5 +1,5 @@
-const CACHE = 'pierces-media-shell-v1';
-const SHELL = ['/static/css/base.css', '/static/img/media-icon.svg', '/static/offline.html'];
+const CACHE = 'pierces-media-shell-v2';
+const SHELL = ['/static/css/base.css', '/static/img/favicon.png', '/static/offline.html'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
