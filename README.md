@@ -73,6 +73,9 @@ shows a network-required notice only. The service worker caches the shared
 stylesheet, brand icon, and offline page; it never caches navigations or
 private/admin/API/OIDC/invite responses.
 
+Home displays the welcome banner at its original aspect ratio without cropping;
+its feathered edges blend into the matching dark-navy page background (`#060d20`).
+
 ## Local development
 
 ```bash
