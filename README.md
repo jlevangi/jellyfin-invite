@@ -21,6 +21,9 @@ https://join.levangie.dev.
    Chrome, then Jellyfin browser sign-in and mobile/TV Quick Connect using the
    supplied walkthrough videos. Installation must happen on Seerr itself; this separate guide
    cannot trigger or detect Seerr installation.
+   The Seerr section covers installation only: Safari uses **Add to Home Screen**;
+   Android Chrome uses **Install and create shortcut**. The Jellyfin server address
+   is centered and tap-to-copy above the mobile/TV Quick Connect steps.
 5. Group `jellyfin-users` grants the realm role checked by Jellyfin's SSO
    plugin. Use **Sign in with Keycloak** in Jellyfin's web browser interface and
    Seerr. Jellyfin mobile and TV apps use **Quick Connect**, approved from a
