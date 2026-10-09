@@ -4,6 +4,7 @@
 {% block body %}
 <div class="wrap guide-walkthrough" data-authenticated="{{ 'true' if authenticated else 'false' }}">
   <div class="guide-intro" aria-labelledby="intro-title">
+    <img class="home-banner" src="{{ url_for('static', filename='img/home-banner.webp') }}" width="1024" height="339" alt="Welcome to the Jellyfin server">
     <section class="hero card welcome-start">
     <div class="eyebrow">Pierce's media setup</div>
     <h1 id="intro-title">Set up your media access</h1>
